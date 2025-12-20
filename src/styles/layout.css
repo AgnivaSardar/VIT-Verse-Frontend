@@ -1,0 +1,127 @@
+/* --- Header --- */
+header {
+  background: var(--vit-blue);
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  top: 0;
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-section h1 {
+  font-size: 1.5rem;
+  letter-spacing: 1px;
+}
+
+.logo-section span {
+  color: var(--vit-yellow);
+}
+
+/* --- Sidebar --- */
+aside {
+  width: var(--sidebar-width);
+  background: white;
+  height: calc(100vh - 60px);
+  position: fixed;
+  top: 60px;
+  left: 0;
+  padding: 20px 10px;
+  border-right: 1px solid #ddd;
+  overflow-y: auto;
+  z-index: 999;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  text-decoration: none;
+  color: var(--text-main);
+  border-radius: 8px;
+  margin-bottom: 5px;
+  transition: 0.3s;
+  cursor: pointer;
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background: #eef2f7;
+  color: var(--vit-light-blue);
+  font-weight: bold;
+}
+
+.nav-link i {
+  margin-right: 15px;
+  width: 20px;
+}
+
+.section-title {
+  font-size: 0.8rem;
+  color: #888;
+  text-transform: uppercase;
+  margin: 20px 0 10px 15px;
+  font-weight: 600;
+}
+
+/* --- Main Content --- */
+main {
+  margin-left: var(--sidebar-width);
+  padding: 80px 30px 30px 30px;
+  min-height: 100vh;
+}
+
+/* --- Floating Upload Button --- */
+.upload-btn {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: var(--vit-yellow);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  color: var(--vit-blue);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  text-decoration: none;
+  border: none;
+  transition: transform 0.3s, box-shadow 0.3s;
+  z-index: 900;
+}
+
+.upload-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 768px) {
+  aside {
+    width: 60px;
+    padding: 10px 5px;
+  }
+
+  .nav-link span,
+  .section-title,
+  .logo-section h1 {
+    display: none;
+  }
+
+  main {
+    margin-left: 60px;
+    padding: 80px 15px 30px 15px;
+  }
+}

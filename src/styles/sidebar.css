@@ -1,0 +1,19 @@
+/* Sidebar Navigation Styles */
+aside .nav-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+hr {
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .nav-link span {
+    display: none;
+  }
+
+  .nav-link {
+    justify-content: center;
+  }
+}

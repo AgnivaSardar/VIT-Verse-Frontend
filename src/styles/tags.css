@@ -1,0 +1,35 @@
+.categories {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 25px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  scroll-behavior: smooth;
+}
+
+.categories::-webkit-scrollbar {
+  height: 4px;
+}
+
+.tag {
+  background: white;
+  padding: 6px 15px;
+  border-radius: 15px;
+  border: 1px solid #ddd;
+  white-space: nowrap;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+  user-select: none;
+}
+
+.tag:hover {
+  border-color: var(--vit-light-blue);
+  background: #f0f5ff;
+}
+
+.tag.active {
+  background: var(--vit-blue);
+  color: white;
+  border-color: var(--vit-blue);
+}
