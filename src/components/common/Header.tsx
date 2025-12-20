@@ -75,7 +75,7 @@ const Header: React.FC = () => {
       <div className="logo-section">
         <FaBars className="menu-icon" onClick={toggleSidebar} />
         <h1>
-          VITC-<span>Stream</span>
+          VIT-<span>Verse</span>
         </h1>
       </div>
 

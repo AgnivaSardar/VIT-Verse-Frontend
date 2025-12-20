@@ -14,7 +14,7 @@ interface NavLink {
 
 const mainNav: NavLink[] = [
   { path: '/', label: 'Home', icon: <FaHome /> },
-  { path: '/trending', label: 'Trending at VITC', icon: <FaBolt /> },
+  { path: '/trending', label: 'Trending at VIT-Verse', icon: <FaBolt /> },
   { path: '/subscriptions', label: 'Subscriptions', icon: <FaLayerGroup /> },
 ];
 

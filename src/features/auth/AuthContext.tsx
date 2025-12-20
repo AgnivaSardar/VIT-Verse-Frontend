@@ -67,7 +67,7 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const AUTH_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const AUTH_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
     // Restore token from localStorage on mount
