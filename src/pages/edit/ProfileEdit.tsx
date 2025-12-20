@@ -7,7 +7,12 @@ import { usersApi, type User } from '../../services/usersApi';
 import '../../styles/layout.css';
 import '../../styles/video-detail.css';
 
-const unwrap = <T>(resp: any): T => (resp && typeof resp === 'object' && 'data' in resp ? (resp as any).data : resp);
+function unwrap<T>(resp: any): T {
+  if (resp && typeof resp === 'object' && 'data' in resp) {
+    return (resp as any).data;
+  }
+  return resp as T;
+}
 
 const ProfileEdit: React.FC = () => {
   const { user } = useAuth();
@@ -25,7 +30,7 @@ const ProfileEdit: React.FC = () => {
       try {
         const response = await usersApi.getById(user.id);
         const data = unwrap<User | undefined>(response);
-        setProfile(data);
+        setProfile(data ?? null);
       } catch (error) {
         toast.error('Failed to load profile');
         console.error(error);

@@ -8,7 +8,12 @@ import type { Channel } from '../../types';
 import '../../styles/layout.css';
 import '../../styles/video-detail.css';
 
-const unwrap = <T>(resp: any): T => (resp && typeof resp === 'object' && 'data' in resp ? (resp as any).data : resp);
+function unwrap<T>(resp: any): T {
+  if (resp && typeof resp === 'object' && 'data' in resp) {
+    return (resp as any).data;
+  }
+  return resp as T;
+}
 
 const ChannelEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +30,7 @@ const ChannelEdit: React.FC = () => {
       try {
         const response = await channelsApi.getById(channelId);
         const data = unwrap<Channel | undefined>(response);
-        setChannel(data);
+        setChannel(data ?? null);
       } catch (error) {
         toast.error('Failed to load channel');
         console.error(error);

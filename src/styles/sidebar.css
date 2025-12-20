@@ -4,6 +4,11 @@ aside .nav-link svg {
   height: 20px;
 }
 
+.nav-link.muted {
+  color: #9aa0a6;
+  cursor: default;
+}
+
 hr {
   opacity: 0.5;
 }

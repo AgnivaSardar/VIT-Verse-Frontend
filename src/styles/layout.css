@@ -40,6 +40,7 @@ aside {
   border-right: 1px solid #ddd;
   overflow-y: auto;
   z-index: 999;
+  transition: transform 0.25s ease;
 }
 
 .nav-link {
@@ -79,6 +80,14 @@ main {
   margin-left: var(--sidebar-width);
   padding: 80px 30px 30px 30px;
   min-height: 100vh;
+}
+
+body.sidebar-hidden aside {
+  transform: translateX(-110%);
+}
+
+body.sidebar-hidden main {
+  margin-left: 0;
 }
 
 /* --- Floating Upload Button --- */
@@ -123,5 +132,9 @@ main {
   main {
     margin-left: 60px;
     padding: 80px 15px 30px 15px;
+  }
+
+  body.sidebar-hidden main {
+    margin-left: 0;
   }
 }

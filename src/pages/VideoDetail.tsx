@@ -12,7 +12,12 @@ import { useAuth } from '../hooks/useAuth';
 import '../styles/layout.css';
 import '../styles/video-detail.css';
 
-const unwrap = <T>(resp: any): T => (resp && typeof resp === 'object' && 'data' in resp ? (resp as any).data : resp);
+function unwrap<T>(resp: any): T {
+  if (resp && typeof resp === 'object' && 'data' in resp) {
+    return (resp as any).data;
+  }
+  return resp as T;
+}
 
 interface CommentItem {
   id?: number;
@@ -51,7 +56,7 @@ const VideoDetail: React.FC = () => {
 
         if (videoRes.status === 'fulfilled') {
           const data = unwrap<Video | undefined>(videoRes.value);
-          setVideo(data);
+          setVideo(data ?? null);
         } else {
           throw videoRes.reason;
         }
