@@ -81,7 +81,9 @@ const Sidebar: React.FC = () => {
 
       <p className="section-title">Subscribed Channels</p>
       {topChannels.length ? (
-        topChannels.map((channel) => (
+        topChannels
+          .filter((channel) => channel.id !== undefined && channel.id !== null)
+          .map((channel) => (
           <Link
             key={channel.id || channel.channelName}
             to={`/channel/${channel.id}`}
@@ -90,7 +92,7 @@ const Sidebar: React.FC = () => {
             <FaLayerGroup />
             <span>{channel.channelName}</span>
           </Link>
-        ))
+          ))
       ) : (
         <div className="nav-link muted">No channels</div>
       )}

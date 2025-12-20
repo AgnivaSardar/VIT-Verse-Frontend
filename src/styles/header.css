@@ -36,6 +36,12 @@
   color: white;
 }
 
+.icon-with-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .user-icons a,
 .user-icons svg {
   cursor: pointer;
@@ -53,6 +59,68 @@
   border-radius: 50%;
   border: 2px solid var(--vit-yellow);
   cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  top: 120%;
+  right: 0;
+  background: white;
+  color: #1f1f1f;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  overflow: hidden;
+  z-index: 1200;
+}
+
+.dropdown.notifications {
+  min-width: 280px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.dropdown-header {
+  padding: 10px 14px;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.dropdown-item svg {
+  width: 16px;
+  height: 16px;
+}
+
+.dropdown-item.muted {
+  color: #9aa0a6;
+  cursor: default;
+}
+
+.note-message {
+  flex: 1;
+  font-weight: 600;
+}
+
+.note-meta {
+  font-size: 0.8rem;
+  color: #6b7280;
 }
 
 @media (max-width: 768px) {

@@ -9,3 +9,48 @@
   height: 100vh;
 }
 
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  padding: 40px 20px;
+}
+
+.auth-card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 420px;
+  display: grid;
+  gap: 12px;
+}
+
+.auth-card h2 {
+  margin: 0 0 10px;
+}
+
+.auth-card input,
+.auth-card select,
+.auth-card button {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 1rem;
+}
+
+.auth-card button {
+  background: var(--vit-blue);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.auth-card button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+

@@ -10,6 +10,8 @@ import Search from './pages/Search';
 import ChannelEdit from './pages/edit/ChannelEdit';
 import ProfileEdit from './pages/edit/ProfileEdit';
 import VideoEdit from './pages/edit/VideoEdit';
+import Login from './features/auth/Login';
+import Register from './features/auth/Register';
 import './App.css';
 import './styles/layout.css';
 
@@ -26,6 +28,8 @@ function App() {
             <Route path="/upload" element={<Upload />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/channel/:id/edit" element={<ChannelEdit />} />
             <Route path="/profile/edit" element={<ProfileEdit />} />
             <Route path="/video/:id/edit" element={<VideoEdit />} />
