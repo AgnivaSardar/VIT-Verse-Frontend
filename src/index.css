@@ -26,10 +26,7 @@ html, body, #root {
 }
 
 body {
-  background: radial-gradient(circle at 20% 20%, rgba(79, 139, 255, 0.12), transparent 30%),
-    radial-gradient(circle at 80% 10%, rgba(124, 58, 237, 0.12), transparent 25%),
-    radial-gradient(circle at 50% 80%, rgba(23, 195, 255, 0.1), transparent 25%),
-    var(--bg-color);
+  background: #05080f;
   color: var(--text-main);
   min-height: 100vh;
 }

@@ -46,10 +46,16 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
     if (video.thumbnail) {
       return video.thumbnail;
     }
-    // Generate a random color background if no thumbnail
-    const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+    // Greyscale palette fallback when no thumbnail
+    const colors = ['#0f172a', '#111827', '#1f2937', '#2d3748', '#374151'];
     const color = colors[video.id % colors.length];
     return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='160'%3E%3Crect fill='${color.replace('#', '%23')}' width='280' height='160'/%3E%3C/svg%3E`;
+  };
+
+  const formatUploadedDate = (value: string) => {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return (
@@ -62,7 +68,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
           <img
             src={
               video.channelImage ||
-              `https://ui-avatars.com/api/?name=${video.channelName}&background=003366&color=fff`
+              `https://ui-avatars.com/api/?name=${video.channelName}&background=1f2937&color=e5e7eb`
             }
             className="chan-img"
             alt={video.channelName}
@@ -73,7 +79,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
               {video.channelName}
               {video.badge && <span className="badge">{video.badge}</span>}
             </p>
-            <p>{formatViews(video.views)} views • {video.uploadedAt}</p>
+            <p>{formatViews(video.views)} views • {formatUploadedDate(video.uploadedAt)}</p>
           </div>
         </div>
       </div>

@@ -1,6 +1,6 @@
 /* --- Header --- */
 header {
-  background: #0a1326;
+  background: #090c12;
   color: white;
   padding: 12px 22px;
   display: flex;
@@ -22,10 +22,15 @@ header {
 .logo-section h1 {
   font-size: 1.6rem;
   letter-spacing: 0.8px;
+  background: linear-gradient(135deg, #f7f9fc, #aeb6c7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #f7f9fc;
+  font-weight: 800;
 }
 
 .logo-section span {
-  color: var(--vit-yellow);
+  color: #cbd5e1;
 }
 
 .logo-section .brand {
@@ -39,7 +44,7 @@ header {
 /* --- Sidebar --- */
 aside {
   width: var(--sidebar-width);
-  background: #0a1326;
+  background: #0b0d12;
   height: calc(100vh - 72px);
   position: fixed;
   top: 72px;
@@ -61,15 +66,15 @@ aside {
   margin-bottom: 8px;
   transition: 0.25s ease;
   cursor: pointer;
-  border: 1px solid transparent;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+  border: 1px solid #1c1f27;
+  background: #10131a;
 }
 
 .nav-link:hover,
 .nav-link.active {
-  background: rgba(255, 255, 255, 0.06);
+  background: #161a22;
   color: #e8edff;
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: #252a33;
 }
 
 .nav-link i {
@@ -83,7 +88,7 @@ aside {
 
 .section-title {
   font-size: 0.8rem;
-  color: #7b89a8;
+  color: #8b94a8;
   text-transform: uppercase;
   margin: 16px 0 8px 12px;
   font-weight: 700;
@@ -110,7 +115,7 @@ body.sidebar-hidden main {
   position: fixed;
   bottom: 30px;
   right: 30px;
-  background: var(--vit-yellow);
+  background: #1b1f2a;
   width: 60px;
   height: 60px;
   border-radius: 50%;
@@ -118,16 +123,18 @@ body.sidebar-hidden main {
   justify-content: center;
   align-items: center;
   font-size: 1.5rem;
-  color: var(--vit-blue);
+  color: #e7ecf5;
   cursor: pointer;
   text-decoration: none;
-  border: none;
-  transition: transform 0.3s;
+  border: 1px solid #232732;
+  transition: transform 0.3s, background-color 0.2s, border-color 0.2s;
   z-index: 900;
 }
 
 .upload-btn:hover {
-  transform: scale(1.1);
+  transform: scale(1.05);
+  background: #202530;
+  border-color: #2a2f3a;
 }
 
 @media (max-width: 768px) {

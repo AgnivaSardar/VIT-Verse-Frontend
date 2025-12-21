@@ -26,7 +26,7 @@
 
 .search-bar button {
   border: none;
-  background: #1d2b4a;
+  background: #1b1f2a;
   cursor: pointer;
   color: #f4f6fb;
   display: flex;
@@ -34,11 +34,11 @@
   font-size: 1rem;
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid #1f222c;
 }
 
 .search-bar button:hover {
-  color: #333;
+  background: #202530;
 }
 
 .user-icons {
@@ -136,7 +136,7 @@
 .dropdown-divider {
   height: 1px;
   border: none;
-  background-color: #e0e0e0;
+  background-color: #1f2a3d;
   margin: 8px 0;
   padding: 0;
 }

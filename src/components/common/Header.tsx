@@ -149,7 +149,7 @@ const Header: React.FC = () => {
 
         <div className="icon-with-menu">
           <img
-            src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=ffcc00&color=003366`}
+            src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=1f2937&color=e2e8f0`}
             className="user-avatar"
             alt="Profile"
             title="Profile"

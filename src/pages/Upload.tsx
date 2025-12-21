@@ -8,6 +8,7 @@ import { videosApi } from '../services/videosApi';
 import { tagsApi, type Tag } from '../services/tagsApi';
 import { channelsApi } from '../services/channelsApi';
 import { playlistsApi, type Playlist } from '../services/playlistsApi';
+import { useAuth } from '../hooks/useAuth';
 import '../styles/layout.css';
 import '../styles/upload.css';
 
@@ -21,6 +22,7 @@ interface VideoFormData {
 
 const Upload: React.FC = () => {
   const navigate = useNavigate();
+  const { token } = useAuth();
   const [formData, setFormData] = useState<VideoFormData>({
     title: '',
     description: '',
@@ -37,21 +39,28 @@ const Upload: React.FC = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
   useEffect(() => {
+    if (!token) {
+      // Replace history so back goes to the previous non-upload page
+      navigate('/login', { replace: true, state: { from: '/upload', fallback: '/' } });
+      return;
+    }
     checkUserChannel();
     loadPopularTags();
     loadPlaylists();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
+    if (!token) return;
     // Refresh channel check whenever the window regains focus
     const handleFocus = () => {
       checkUserChannel();
     };
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+  }, [token]);
 
   const checkUserChannel = async () => {
+    if (!token) return;
     try {
       const response = await channelsApi.getMyChannel();
       setHasChannel(!!response.data);
@@ -66,6 +75,7 @@ const Upload: React.FC = () => {
   };
 
   const loadPlaylists = async () => {
+    if (!token) return;
     try {
       const response = await playlistsApi.getMyPlaylists();
       setPlaylists(response.data || []);
