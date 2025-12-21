@@ -12,6 +12,7 @@ import CreatePlaylist from './pages/CreatePlaylist';
 import ChannelEdit from './pages/edit/ChannelEdit';
 import ProfileEdit from './pages/edit/ProfileEdit';
 import VideoEdit from './pages/edit/VideoEdit';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import './App.css';
@@ -32,6 +33,7 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/search" element={<Search />} />
             <Route path="/playlists/create" element={<CreatePlaylist />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/channel/:id/edit" element={<ChannelEdit />} />

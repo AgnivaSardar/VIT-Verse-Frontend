@@ -59,12 +59,15 @@ const Home: React.FC = () => {
       setLoading(true);
       try {
         const response = await videosApi.getAll();
+        console.log('Videos API response:', response);
         const data = unwrap<ApiVideo[] | undefined>(response) || [];
+        console.log('Unwrapped data:', data);
         const normalized = Array.isArray(data) ? data.map((v, idx) => mapVideo(v, idx)) : [];
+        console.log('Normalized videos:', normalized);
         setVideos(normalized);
       } catch (error) {
+        console.error('Video load error:', error);
         toast.error('Failed to load videos');
-        console.error('Video load error', error);
       } finally {
         setLoading(false);
       }

@@ -4,13 +4,16 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'student' | 'teacher';
+  role: 'student' | 'teacher' | 'admin';
+  isEmailVerified?: boolean;
+  isSuperAdmin?: boolean;
 }
 
 export interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string, role: 'student' | 'teacher') => Promise<void>;
   logout: () => void;
@@ -103,10 +106,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = await response.json();
       const token = data.data?.token || data.token;
       const user: User = {
-        id: data.data?.userID || data.userID,
+        id: data.data?.userID || data.userID || data.data?.id,
         name: data.data?.name || email,
         email: data.data?.email || email,
         role: data.data?.role || 'student',
+        isEmailVerified: data.data?.isEmailVerified ?? true,
+        isSuperAdmin: data.data?.isSuperAdmin ?? false,
       };
 
       localStorage.setItem('authToken', token);
@@ -138,13 +143,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (!response.ok) throw new Error('Registration failed');
 
-      const data = await response.json();
-      const user: User = data.data || { id: 0, name, email, role };
-
-      dispatch({
-        type: 'LOGIN_SUCCESS',
-        payload: { user, token: '' },
-      });
+      await response.json();
+      // After registration, user needs to verify OTP - don't auto-login
+      dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
       dispatch({ type: 'SET_LOADING', payload: false });
       throw error;
@@ -161,6 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user: state.user,
     token: state.token,
     isLoading: state.isLoading,
+    isAuthenticated: !!state.token,
     login,
     register,
     logout,

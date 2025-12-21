@@ -70,6 +70,13 @@ const api = {
       headers: getAuthHeaders(),
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
+  patch: <T>(endpoint: string, body?: any) =>
+    fetch(buildUrl(endpoint), {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: body ? JSON.stringify(body) : undefined,
+    }).then(handleResponse) as Promise<ApiResponse<T>>,
+
   upload: (endpoint: string, formData: FormData) => {
     const headers = getAuthHeadersNoContentType();
     return fetch(buildUrl(endpoint), {
@@ -78,6 +85,27 @@ const api = {
       body: formData,
     }).then(handleResponse);
   },
+
+  // Test backend connection
+  testConnection: async () => {
+    try {
+      const response = await fetch(`${API_BASE.replace('/api', '')}/api/test-connection`);
+      const data = await response.json();
+      console.log('✅ FRONTEND-BACKEND CONNECTION SUCCESSFUL!');
+      console.log('📦 Backend Info:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ FRONTEND-BACKEND CONNECTION FAILED:', error);
+      throw error;
+    }
+  }
 };
+
+// Auto-test connection on module load (only in development)
+if (import.meta.env.DEV) {
+  api.testConnection().catch(() => {
+    console.warn('⚠️ Could not connect to backend. Make sure the backend server is running.');
+  });
+}
 
 export default api;
