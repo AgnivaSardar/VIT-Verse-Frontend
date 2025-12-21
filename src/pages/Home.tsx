@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
@@ -12,8 +10,8 @@ import type { Video as ApiVideo } from '../types/video';
 import '../styles/layout.css';
 import '../styles/video-grid.css';
 
-const mapVideo = (video: ApiVideo): Video => ({
-  id: video.id ?? 0,
+const mapVideo = (video: ApiVideo, index: number): Video => ({
+  id: video.id ?? (video as any)?.videoID ?? index,
   title: video.title ?? 'Untitled video',
   description: video.description,
   thumbnail: video.thumbnail,
@@ -62,7 +60,7 @@ const Home: React.FC = () => {
       try {
         const response = await videosApi.getAll();
         const data = unwrap<ApiVideo[] | undefined>(response) || [];
-        const normalized = Array.isArray(data) ? data.map(mapVideo) : [];
+        const normalized = Array.isArray(data) ? data.map((v, idx) => mapVideo(v, idx)) : [];
         setVideos(normalized);
       } catch (error) {
         toast.error('Failed to load videos');
@@ -103,10 +101,6 @@ const Home: React.FC = () => {
           </div>
         )}
       </main>
-
-      <Link to="/upload" className="upload-btn" title="Upload Video">
-        <FaPlus />
-      </Link>
     </div>
   );
 };

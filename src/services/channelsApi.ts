@@ -6,6 +6,7 @@ export const channelsApi = {
   getById: (id: number) => api.get<Channel>(`channels/${id}`),
   getByName: (name: string, userId: number) =>
     api.get<Channel>(`channels/name/${encodeURIComponent(name)}/user/${userId}`),
+  getMyChannel: () => api.get<Channel>('channels/my'),
   create: (channel: Omit<Channel, 'id'>) => api.post('channels', channel),
   update: (id: number, data: Partial<Channel>) => api.put(`channels/${id}`, data),
   delete: (id: number) => api.delete(`channels/${id}`),

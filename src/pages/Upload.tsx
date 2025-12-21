@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { FaUpload, FaCheck, FaTimes, FaPlus } from 'react-icons/fa';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import { videosApi } from '../services/videosApi';
 import { tagsApi, type Tag } from '../services/tagsApi';
+import { channelsApi } from '../services/channelsApi';
+import { playlistsApi, type Playlist } from '../services/playlistsApi';
 import '../styles/layout.css';
 import '../styles/upload.css';
 
@@ -13,9 +16,11 @@ interface VideoFormData {
   description: string;
   file?: File;
   tags: string[];
+  playlistID?: number;
 }
 
 const Upload: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<VideoFormData>({
     title: '',
     description: '',
@@ -28,10 +33,46 @@ const Upload: React.FC = () => {
   const [searchResults, setSearchResults] = useState<Tag[]>([]);
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
+  const [hasChannel, setHasChannel] = useState<boolean | null>(null);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
   useEffect(() => {
+    checkUserChannel();
     loadPopularTags();
+    loadPlaylists();
   }, []);
+
+  useEffect(() => {
+    // Refresh channel check whenever the window regains focus
+    const handleFocus = () => {
+      checkUserChannel();
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  const checkUserChannel = async () => {
+    try {
+      const response = await channelsApi.getMyChannel();
+      setHasChannel(!!response.data);
+    } catch (error: any) {
+      if (error?.response?.status === 404) {
+        setHasChannel(false);
+      } else {
+        console.error('Failed to check channel:', error);
+        setHasChannel(false);
+      }
+    }
+  };
+
+  const loadPlaylists = async () => {
+    try {
+      const response = await playlistsApi.getMyPlaylists();
+      setPlaylists(response.data || []);
+    } catch (error) {
+      console.error('Failed to load playlists:', error);
+    }
+  };
 
   const loadPopularTags = async () => {
     try {
@@ -132,20 +173,63 @@ const Upload: React.FC = () => {
         uploadFormData.append('tags', JSON.stringify(formData.tags));
       }
 
+      if (formData.playlistID) {
+        uploadFormData.append('playlistID', formData.playlistID.toString());
+      }
+
       setUploadProgress(25);
-      const result = await videosApi.upload(uploadFormData);
+      await videosApi.upload(uploadFormData);
       setUploadProgress(100);
       
       toast.success('Video uploaded successfully!');
       setFormData({ title: '', description: '', tags: [] });
       setUploadProgress(0);
-    } catch (error) {
-      toast.error('Upload failed. Please try again.');
+    } catch (error: any) {
+      const errorMsg = error?.response?.data?.message || 'Upload failed. Please try again.';
+      toast.error(errorMsg);
       console.error(error);
     } finally {
       setUploading(false);
     }
   };
+
+  if (hasChannel === null) {
+    return (
+      <div className="app-container">
+        <Header />
+        <Sidebar />
+        <main>
+          <div className="upload-container">
+            <p>Loading...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (hasChannel === false) {
+    return (
+      <div className="app-container">
+        <Header />
+        <Sidebar />
+        <main>
+          <div className="upload-container">
+            <div className="no-channel-message">
+              <h2>Create a Channel First</h2>
+              <p>You need to create a channel before you can upload videos.</p>
+              <p>Each user can have only one channel where all your videos will be published.</p>
+              <button 
+                className="create-channel-button"
+                onClick={() => navigate('/channels/create')}
+              >
+                Create Channel
+              </button>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
@@ -215,6 +299,28 @@ const Upload: React.FC = () => {
                   )}
                 </label>
               </div>
+            </div>
+
+            <div className="form-section">
+              <label className="form-label">Playlist (Optional)</label>
+              <select
+                name="playlistID"
+                value={formData.playlistID || ''}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  playlistID: e.target.value ? Number(e.target.value) : undefined 
+                }))}
+                className="form-input"
+                disabled={uploading}
+              >
+                <option value="">No Playlist (Independent)</option>
+                {playlists.map((playlist) => (
+                  <option key={playlist.id} value={playlist.id}>
+                    {playlist.name}
+                  </option>
+                ))}
+              </select>
+              <p className="form-hint">You can add this video to a playlist later by editing it</p>
             </div>
 
             <div className="form-section">

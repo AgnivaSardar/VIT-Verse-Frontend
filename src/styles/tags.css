@@ -5,6 +5,7 @@
   overflow-x: auto;
   padding-bottom: 10px;
   scroll-behavior: smooth;
+  padding-top: 4px;
 }
 
 .categories::-webkit-scrollbar {
@@ -12,24 +13,29 @@
 }
 
 .tag {
-  background: white;
-  padding: 6px 15px;
-  border-radius: 15px;
-  border: 1px solid #ddd;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   white-space: nowrap;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.3s;
+  transition: all 0.25s ease;
   user-select: none;
+  color: #d8ddf0;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
 .tag:hover {
-  border-color: var(--vit-light-blue);
-  background: #f0f5ff;
+  border-color: rgba(23, 195, 255, 0.45);
+  background: rgba(23, 195, 255, 0.12);
+  color: #f6f9ff;
+  box-shadow: 0 12px 24px rgba(23, 195, 255, 0.15);
 }
 
 .tag.active {
-  background: var(--vit-blue);
-  color: white;
-  border-color: var(--vit-blue);
+  background: linear-gradient(135deg, #4f8bff, #17c3ff);
+  color: #061022;
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 35px rgba(23, 195, 255, 0.35);
 }

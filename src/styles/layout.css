@@ -1,43 +1,51 @@
 /* --- Header --- */
 header {
-  background: var(--vit-blue);
+  background: #0a1326;
   color: white;
-  padding: 10px 20px;
+  padding: 12px 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: fixed;
   width: 100%;
   z-index: 1000;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   top: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .logo-section {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 12px;
 }
 
 .logo-section h1 {
-  font-size: 1.5rem;
-  letter-spacing: 1px;
+  font-size: 1.6rem;
+  letter-spacing: 0.8px;
 }
 
 .logo-section span {
   color: var(--vit-yellow);
 }
 
+.logo-section .brand {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 /* --- Sidebar --- */
 aside {
   width: var(--sidebar-width);
-  background: white;
-  height: calc(100vh - 60px);
+  background: #0a1326;
+  height: calc(100vh - 72px);
   position: fixed;
-  top: 60px;
+  top: 72px;
   left: 0;
-  padding: 20px 10px;
-  border-right: 1px solid #ddd;
+  padding: 20px 14px 24px;
+  border-right: 1px solid var(--border);
   overflow-y: auto;
   z-index: 999;
   transition: transform 0.25s ease;
@@ -46,20 +54,22 @@ aside {
 .nav-link {
   display: flex;
   align-items: center;
-  padding: 12px 15px;
+  padding: 12px 14px;
   text-decoration: none;
-  color: var(--text-main);
-  border-radius: 8px;
-  margin-bottom: 5px;
-  transition: 0.3s;
+  color: var(--muted);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  transition: 0.25s ease;
   cursor: pointer;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
 }
 
 .nav-link:hover,
 .nav-link.active {
-  background: #eef2f7;
-  color: var(--vit-light-blue);
-  font-weight: bold;
+  background: rgba(255, 255, 255, 0.06);
+  color: #e8edff;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .nav-link i {
@@ -67,18 +77,23 @@ aside {
   width: 20px;
 }
 
+.nav-link span {
+  padding-left: 6px;
+}
+
 .section-title {
   font-size: 0.8rem;
-  color: #888;
+  color: #7b89a8;
   text-transform: uppercase;
-  margin: 20px 0 10px 15px;
-  font-weight: 600;
+  margin: 16px 0 8px 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 /* --- Main Content --- */
 main {
   margin-left: var(--sidebar-width);
-  padding: 80px 30px 30px 30px;
+  padding: 96px 32px 40px 32px;
   min-height: 100vh;
 }
 
@@ -104,17 +119,15 @@ body.sidebar-hidden main {
   align-items: center;
   font-size: 1.5rem;
   color: var(--vit-blue);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   text-decoration: none;
   border: none;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s;
   z-index: 900;
 }
 
 .upload-btn:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 @media (max-width: 768px) {

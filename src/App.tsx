@@ -7,6 +7,8 @@ import VideoDetail from './pages/VideoDetail';
 import Upload from './pages/Upload';
 import Profile from './pages/Profile';
 import Search from './pages/Search';
+import CreateChannel from './pages/CreateChannel';
+import CreatePlaylist from './pages/CreatePlaylist';
 import ChannelEdit from './pages/edit/ChannelEdit';
 import ProfileEdit from './pages/edit/ProfileEdit';
 import VideoEdit from './pages/edit/VideoEdit';
@@ -24,10 +26,12 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/channel/:id" element={<Channel />} />
+            <Route path="/channels/create" element={<CreateChannel />} />
             <Route path="/video/:id" element={<VideoDetail />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/playlists/create" element={<CreatePlaylist />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/channel/:id/edit" element={<ChannelEdit />} />

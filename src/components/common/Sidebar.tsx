@@ -94,7 +94,10 @@ const Sidebar: React.FC = () => {
           </Link>
           ))
       ) : (
-        <div className="nav-link muted">No channels</div>
+        <div className="nav-link muted">
+          <FaLayerGroup />
+          <span style={{ paddingLeft: 6 }}>No channels subscribed</span>
+        </div>
       )}
 
       <p className="section-title">Tags</p>

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaBars, FaSearch, FaVideo, FaBell, FaUser, FaSignOutAlt, FaEdit } from 'react-icons/fa';
+import { FaBars, FaSearch, FaVideo, FaBell, FaUser, FaSignOutAlt, FaEdit, FaPlayCircle, FaFilm } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { notificationsApi, type Notification } from '../../services/notificationsApi';
+import { channelsApi } from '../../services/channelsApi';
+import type { Channel } from '../../types';
 import '../../styles/header.css';
 
 const Header: React.FC = () => {
@@ -13,8 +15,36 @@ const Header: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifLoading, setNotifLoading] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [userChannel, setUserChannel] = useState<Channel | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+
+  useEffect(() => {
+    if (user) {
+      checkUserChannel();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    // Refresh channel check whenever the window regains focus
+    const handleFocus = () => {
+      if (user) {
+        checkUserChannel();
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user]);
+
+  const checkUserChannel = async () => {
+    try {
+      const response = await channelsApi.getMyChannel();
+      setUserChannel(response.data || null);
+    } catch (error) {
+      // User doesn't have a channel
+      setUserChannel(null);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,9 +104,11 @@ const Header: React.FC = () => {
     <header>
       <div className="logo-section">
         <FaBars className="menu-icon" onClick={toggleSidebar} />
-        <h1>
-          VIT-<span>Verse</span>
-        </h1>
+        <Link to="/" className="brand" aria-label="Go to home">
+          <h1>
+            VIT-<span>Verse</span>
+          </h1>
+        </Link>
       </div>
 
       <form className="search-bar" onSubmit={handleSearch}>
@@ -131,11 +163,27 @@ const Header: React.FC = () => {
               <button className="dropdown-item" onClick={() => navigate('/profile/edit')}>
                 <FaEdit /> Edit Profile
               </button>
+              <hr className="dropdown-divider" />
+              {userChannel ? (
+                <>
+                  <button className="dropdown-item" onClick={() => navigate(`/channel/${userChannel.channelID ?? userChannel.id}`)}>
+                    <FaFilm /> My Channel
+                  </button>
+                  <button className="dropdown-item" onClick={() => navigate('/playlists/create')}>
+                    <FaPlayCircle /> Create Playlist
+                  </button>
+                </>
+              ) : (
+                <button className="dropdown-item" onClick={() => navigate('/channels/create')}>
+                  <FaFilm /> Create Channel
+                </button>
+              )}
+              <hr className="dropdown-divider" />
               <button className="dropdown-item" onClick={() => navigate('/upload')}>
-                <FaVideo /> Upload
+                <FaVideo /> Upload Video
               </button>
               <button
-                className="dropdown-item"
+                className="dropdown-item logout-item"
                 onClick={() => {
                   logout();
                   setShowUserMenu(false);

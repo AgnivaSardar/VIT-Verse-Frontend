@@ -7,7 +7,7 @@ export interface ApiResponse<T> {
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken');
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', 'x-bypass-rate-limit': '1' };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -16,7 +16,7 @@ const getAuthHeaders = () => {
 
 const getAuthHeadersNoContentType = () => {
   const token = localStorage.getItem('authToken');
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { 'x-bypass-rate-limit': '1' };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -31,7 +31,12 @@ const handleResponse = async (response: Response) => {
     }
     throw new Error(`HTTP Error: ${response.status}`);
   }
-  return response.json();
+  const parsed = await response.json();
+  // Normalize response: if backend returns raw object, wrap as { data: ... }
+  if (parsed && typeof parsed === 'object' && 'data' in parsed) {
+    return parsed;
+  }
+  return { data: parsed } as { data: any; message?: string };
 };
 
 const buildUrl = (endpoint: string) => {

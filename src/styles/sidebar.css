@@ -9,6 +9,11 @@ aside .nav-link svg {
   cursor: default;
 }
 
+.nav-link:hover svg,
+.nav-link.active svg {
+  filter: none;
+}
+
 hr {
   opacity: 0.5;
 }

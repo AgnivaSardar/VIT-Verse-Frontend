@@ -1,9 +1,15 @@
 :root {
-  --vit-blue: #003366;
-  --vit-light-blue: #00509d;
-  --vit-yellow: #ffcc00;
-  --bg-color: #f9f9f9;
-  --text-main: #333;
+  --vit-blue: #0b1f3a;
+  --vit-light-blue: #4f8bff;
+  --vit-cyan: #17c3ff;
+  --vit-purple: #7c3aed;
+  --vit-yellow: #f9d923;
+  --bg-color: #060b18;
+  --panel: rgba(255, 255, 255, 0.04);
+  --panel-strong: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.08);
+  --text-main: #e6ebf5;
+  --muted: #9aa5c3;
   --sidebar-width: 240px;
 }
 
@@ -11,7 +17,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Inter', 'Segoe UI', 'SF Pro Display', system-ui, -apple-system, sans-serif;
 }
 
 html, body, #root {
@@ -20,8 +26,12 @@ html, body, #root {
 }
 
 body {
-  background-color: var(--bg-color);
+  background: radial-gradient(circle at 20% 20%, rgba(79, 139, 255, 0.12), transparent 30%),
+    radial-gradient(circle at 80% 10%, rgba(124, 58, 237, 0.12), transparent 25%),
+    radial-gradient(circle at 50% 80%, rgba(23, 195, 255, 0.1), transparent 25%),
+    var(--bg-color);
   color: var(--text-main);
+  min-height: 100vh;
 }
 
 /* Scrollbar styling */
