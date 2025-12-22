@@ -1,15 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaBars, FaSearch, FaVideo, FaBell, FaUser, FaSignOutAlt, FaEdit, FaPlayCircle, FaFilm } from 'react-icons/fa';
+import {
+  FaBars,
+  FaVideo,
+  FaBell,
+  FaUser,
+  FaSignOutAlt,
+  FaEdit,
+  FaPlayCircle,
+  FaFilm,
+  FaMoon,
+  FaSun,
+} from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../contexts/ThemeContext';
+import SearchBar from './SearchBar';
 import { notificationsApi, type Notification } from '../../services/notificationsApi';
 import { channelsApi } from '../../services/channelsApi';
 import type { Channel } from '../../types';
 import '../../styles/header.css';
 
 const Header: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -18,6 +30,7 @@ const Header: React.FC = () => {
   const [userChannel, setUserChannel] = useState<Channel | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (user) {
@@ -26,7 +39,6 @@ const Header: React.FC = () => {
   }, [user]);
 
   useEffect(() => {
-    // Refresh channel check whenever the window regains focus
     const handleFocus = () => {
       if (user) {
         checkUserChannel();
@@ -40,16 +52,8 @@ const Header: React.FC = () => {
     try {
       const response = await channelsApi.getMyChannel();
       setUserChannel(response.data || null);
-    } catch (error) {
-      // User doesn't have a channel
+    } catch {
       setUserChannel(null);
-    }
-  };
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -111,22 +115,16 @@ const Header: React.FC = () => {
         </Link>
       </div>
 
-      <form className="search-bar" onSubmit={handleSearch}>
-        <input
-          type="text"
-          placeholder="Search for lectures, clubs, events..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <button type="submit">
-          <FaSearch />
-        </button>
-      </form>
+      {/* pill wrapper */}
+      <div className="search-wrapper">
+        <SearchBar />
+      </div>
 
       <div className="user-icons">
         <Link to="/upload" title="Upload Video">
           <FaVideo />
         </Link>
+
         <div className="icon-with-menu">
           <FaBell onClick={handleBellClick} />
           {showNotifications && (
@@ -166,15 +164,26 @@ const Header: React.FC = () => {
               <hr className="dropdown-divider" />
               {userChannel ? (
                 <>
-                  <button className="dropdown-item" onClick={() => navigate(`/channel/${userChannel.channelID ?? userChannel.id}`)}>
+                  <button
+                    className="dropdown-item"
+                    onClick={() =>
+                      navigate(`/channel/${userChannel.channelID ?? userChannel.id}`)
+                    }
+                  >
                     <FaFilm /> My Channel
                   </button>
-                  <button className="dropdown-item" onClick={() => navigate('/playlists/create')}>
+                  <button
+                    className="dropdown-item"
+                    onClick={() => navigate('/playlists/create')}
+                  >
                     <FaPlayCircle /> Create Playlist
                   </button>
                 </>
               ) : (
-                <button className="dropdown-item" onClick={() => navigate('/channels/create')}>
+                <button
+                  className="dropdown-item"
+                  onClick={() => navigate('/channels/create')}
+                >
                   <FaFilm /> Create Channel
                 </button>
               )}
@@ -182,6 +191,12 @@ const Header: React.FC = () => {
               <button className="dropdown-item" onClick={() => navigate('/upload')}>
                 <FaVideo /> Upload Video
               </button>
+              <hr className="dropdown-divider" />
+              <button className="dropdown-item" onClick={toggleTheme}>
+                {theme === 'light' ? <FaMoon /> : <FaSun />}
+                {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+              </button>
+              <hr className="dropdown-divider" />
               <button
                 className="dropdown-item logout-item"
                 onClick={() => {

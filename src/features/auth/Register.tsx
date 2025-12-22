@@ -9,35 +9,105 @@ const Register: React.FC = () => {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const [role, setRole] = useState<'student' | 'teacher'>('student');
+	const [studentRegID, setStudentRegID] = useState('');
+	const [employeeID, setEmployeeID] = useState('');
 	const navigate = useNavigate();
+
+	const isValidEmailDomain = (value: string) =>
+		value.endsWith('@vitstudent.ac.in') || value.endsWith('@vit.ac.in');
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+		if (!isValidEmailDomain(email)) {
+			toast.error('Email must end with @vitstudent.ac.in (students) or @vit.ac.in (professors)');
+			return;
+		}
+		if (password.length < 8) {
+			toast.error('Password must be at least 8 characters');
+			return;
+		}
+		if (role === 'student' && !studentRegID.trim()) {
+			toast.error('Student Registration Number is required');
+			return;
+		}
+		if (role === 'teacher' && !employeeID.trim()) {
+			toast.error('Professor Employee ID is required');
+			return;
+		}
 		try {
-			await register(name, email, password, role);
-			toast.success('Registered');
-			navigate('/');
+			await register({
+				name,
+				email,
+				password,
+				role,
+				studentRegID: role === 'student' ? studentRegID.trim() : undefined,
+				employeeID: role === 'teacher' ? employeeID.trim() : undefined,
+			});
+			toast.success('Registered. Please verify your email with OTP');
+			navigate('/login');
 		} catch (error) {
 			toast.error('Registration failed');
 			console.error(error);
 		}
 	};
 
-	return (
-		<div className="auth-page">
-			<form className="auth-card" onSubmit={handleSubmit}>
-				<h2>Register</h2>
-				<label>Name</label>
-				<input value={name} onChange={(e) => setName(e.target.value)} required />
-				<label>Email</label>
-				<input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
-				<label>Password</label>
-				<input value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
-				<label>Role</label>
-				<select value={role} onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}>
+		return (
+			<div className="auth-page">
+				<form className="auth-card" onSubmit={handleSubmit}>
+					<h2>Register</h2>
+					<label htmlFor="name-input">Name</label>
+					<input id="name-input" name="name" value={name} onChange={(e) => setName(e.target.value)} required />
+					<label htmlFor="email-input">Email</label>
+					<input
+						id="email-input"
+						name="email"
+						value={email}
+						onChange={(e) => setEmail(e.target.value.trim())}
+						type="email"
+						placeholder="name@vitstudent.ac.in or name@vit.ac.in"
+						required
+					/>
+					<label htmlFor="password-input">Password</label>
+					<input
+						id="password-input"
+						name="password"
+						value={password}
+						onChange={(e) => setPassword(e.target.value)}
+						type="password"
+						minLength={8}
+						placeholder="At least 8 characters"
+						required
+					/>
+					<label htmlFor="role-select">Role</label>
+					<select id="role-select" name="role" value={role} onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}>
 					<option value="student">Student</option>
 					<option value="teacher">Teacher</option>
 				</select>
+				{role === 'student' ? (
+					<>
+						<label htmlFor="student-reg">Student Registration Number</label>
+						<input
+							id="student-reg"
+							name="studentRegID"
+							value={studentRegID}
+							onChange={(e) => setStudentRegID(e.target.value)}
+							placeholder="e.g., 21BCE0000"
+							required
+						/>
+					</>
+				) : (
+					<>
+						<label htmlFor="employee-id">Professor Employee ID</label>
+						<input
+							id="employee-id"
+							name="employeeID"
+							value={employeeID}
+							onChange={(e) => setEmployeeID(e.target.value)}
+							placeholder="Enter your employee ID"
+							required
+						/>
+					</>
+				)}
 				<button type="submit" disabled={isLoading}>
 					{isLoading ? 'Signing up...' : 'Register'}
 				</button>

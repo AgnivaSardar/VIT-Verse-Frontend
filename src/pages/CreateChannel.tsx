@@ -1,15 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import { channelsApi } from '../services/channelsApi';
+import { useAuth } from '../hooks/useAuth';
 import '../styles/layout.css';
 import '../styles/form.css';
 
 const CreateChannel: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, isLoading } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      toast.error('Please log in to create a channel');
+      navigate('/login', { replace: true });
+    }
+  }, [isAuthenticated, isLoading, navigate]);
   const [formData, setFormData] = useState({
     channelName: '',
     channelDescription: '',

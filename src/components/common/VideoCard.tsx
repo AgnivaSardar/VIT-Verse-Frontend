@@ -65,14 +65,6 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
           <span className="duration">{formatDuration(video.duration)}</span>
         </div>
         <div className="video-info">
-          <img
-            src={
-              video.channelImage ||
-              `https://ui-avatars.com/api/?name=${video.channelName}&background=1f2937&color=e5e7eb`
-            }
-            className="chan-img"
-            alt={video.channelName}
-          />
           <div className="details">
             <h3>{video.title}</h3>
             <p>
@@ -81,6 +73,14 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
             </p>
             <p>{formatViews(video.views)} views • {formatUploadedDate(video.uploadedAt)}</p>
           </div>
+          <img
+            src={
+              video.channelImage ||
+              `https://ui-avatars.com/api/?name=${video.channelName}&background=1f2937&color=e5e7eb`
+            }
+            className="chan-img"
+            alt={video.channelName}
+          />
         </div>
       </div>
     </Link>

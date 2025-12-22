@@ -17,12 +17,12 @@ function unwrap<T>(resp: any): T {
 }
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [profile, setProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) {
+    if (!isAuthenticated || !user) {
       setLoading(false);
       return;
     }
@@ -52,14 +52,17 @@ const Profile: React.FC = () => {
       <main className="video-detail-page">
         {loading ? (
           <div className="loading">Loading profile...</div>
-        ) : !user ? (
-          <div className="no-results">Please log in to view your profile.</div>
+        ) : !isAuthenticated || !user ? (
+          <div className="no-results">
+            <p>Please log in to view your profile.</p>
+            <Link to="/login" style={{ color: 'var(--primary)', textDecoration: 'underline' }}>Go to Login</Link>
+          </div>
         ) : (
           <div className="sidebar-card">
             <h1>{profile?.name || 'User'}</h1>
             <p>Email: {profile?.email}</p>
             <p>Role: {profile?.role}</p>
-            <Link to="/edit/profile">Edit Profile</Link>
+            <Link to="/profile/edit">Edit Profile</Link>
           </div>
         )}
       </main>

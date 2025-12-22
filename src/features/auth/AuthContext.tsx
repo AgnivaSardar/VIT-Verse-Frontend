@@ -14,8 +14,15 @@ export interface AuthContextType {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, role: 'student' | 'teacher') => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
+  register: (data: {
+    name: string;
+    email: string;
+    password: string;
+    role: 'student' | 'teacher';
+    studentRegID?: string;
+    employeeID?: string;
+  }) => Promise<void>;
   logout: () => void;
 }
 
@@ -92,26 +99,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (identifier: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const response = await fetch(`${AUTH_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       });
 
       if (!response.ok) throw new Error('Login failed');
 
       const data = await response.json();
       const token = data.data?.token || data.token;
+      const payloadUser = data.data?.user || data.user || data.data;
       const user: User = {
-        id: data.data?.userID || data.userID || data.data?.id,
-        name: data.data?.name || email,
-        email: data.data?.email || email,
-        role: data.data?.role || 'student',
-        isEmailVerified: data.data?.isEmailVerified ?? true,
-        isSuperAdmin: data.data?.isSuperAdmin ?? false,
+        id: payloadUser?.id || payloadUser?.userID,
+        name: payloadUser?.name || payloadUser?.userName || identifier,
+        email: payloadUser?.email || payloadUser?.userEmail || identifier,
+        role: payloadUser?.role || 'student',
+        isEmailVerified: payloadUser?.isEmailVerified ?? true,
+        isSuperAdmin: payloadUser?.isSuperAdmin ?? false,
       };
 
       localStorage.setItem('authToken', token);
@@ -127,18 +135,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (
-    name: string,
-    email: string,
-    password: string,
-    role: 'student' | 'teacher'
-  ) => {
+  const register = async (data: {
+    name: string;
+    email: string;
+    password: string;
+    role: 'student' | 'teacher';
+    studentRegID?: string;
+    employeeID?: string;
+  }) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
       const response = await fetch(`${AUTH_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify(data),
       });
 
       if (!response.ok) throw new Error('Registration failed');

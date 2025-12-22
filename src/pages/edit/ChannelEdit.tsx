@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import { channelsApi } from '../../services/channelsApi';
+import { useAuth } from '../../hooks/useAuth';
 import type { Channel } from '../../types';
 import '../../styles/layout.css';
 import '../../styles/video-detail.css';
@@ -18,13 +19,20 @@ function unwrap<T>(resp: any): T {
 const ChannelEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const channelId = Number(id);
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [channel, setChannel] = useState<Channel | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (!channelId) return;
+    if (!isLoading && !isAuthenticated) {
+      toast.error('Please log in to edit a channel');
+      navigate('/login', { replace: true });
+      return;
+    }
+    if (!isAuthenticated || !channelId) return;
     const fetchChannel = async () => {
       setLoading(true);
       try {
@@ -40,7 +48,7 @@ const ChannelEdit: React.FC = () => {
     };
 
     fetchChannel();
-  }, [channelId]);
+  }, [channelId, isAuthenticated, isLoading, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

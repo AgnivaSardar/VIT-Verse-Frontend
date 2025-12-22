@@ -2,20 +2,23 @@
 aside .nav-link svg {
   width: 20px;
   height: 20px;
+  color: #9aa5c3;
+  transition: color 0.2s ease;
+}
+
+aside .nav-link:hover svg,
+aside .nav-link.active svg {
+  color: #60a5fa;
 }
 
 .nav-link.muted {
-  color: #9aa0a6;
+  color: #6b7280;
   cursor: default;
 }
 
-.nav-link:hover svg,
-.nav-link.active svg {
-  filter: none;
-}
-
 hr {
-  opacity: 0.5;
+  opacity: 0.3;
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 @media (max-width: 768px) {

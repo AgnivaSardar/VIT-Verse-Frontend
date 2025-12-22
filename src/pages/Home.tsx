@@ -90,7 +90,7 @@ const Home: React.FC = () => {
       <Header />
       <Sidebar />
 
-      <main>
+      <main className="home-main">
         <CategoryTags tags={tags} activeTag={activeTag} onTagChange={setActiveTag} />
 
         {loading ? (

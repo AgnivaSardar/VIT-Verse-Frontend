@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import Header from '../../components/common/Header';
 import Sidebar from '../../components/common/Sidebar';
 import { videosApi } from '../../services/videosApi';
+import { useAuth } from '../../hooks/useAuth';
 import type { Video } from '../../types/video';
 import '../../styles/layout.css';
 import '../../styles/video-detail.css';
@@ -18,11 +19,18 @@ function unwrap<T>(resp: any): T {
 const VideoEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const videoId = Number(id);
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
   const [video, setVideo] = useState<Video | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!videoId) return;
+    if (!isLoading && !isAuthenticated) {
+      toast.error('Please log in to edit a video');
+      navigate('/login', { replace: true });
+      return;
+    }
+    if (!isAuthenticated || !videoId) return;
     const fetchVideo = async () => {
       setLoading(true);
       try {
@@ -38,7 +46,7 @@ const VideoEdit: React.FC = () => {
     };
 
     fetchVideo();
-  }, [videoId]);
+  }, [videoId, isAuthenticated, isLoading, navigate]);
 
   return (
     <div className="app-container">
