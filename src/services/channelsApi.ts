@@ -7,8 +7,15 @@ export const channelsApi = {
   getByName: (name: string, userId: number) =>
     api.get<Channel>(`channels/name/${encodeURIComponent(name)}/user/${userId}`),
   getMyChannel: () => api.get<Channel>('channels/my'),
-  create: (channel: Omit<Channel, 'id'>) => api.post('channels', channel),
-  update: (id: number, data: Partial<Channel>) => api.put(`channels/${id}`, data),
+  getStats: (id: number) => api.get(`channels/${id}/stats`),
+  create: (payload: Omit<Channel, 'id'> | FormData) => {
+    if (payload instanceof FormData) return api.upload('channels', payload);
+    return api.post('channels', payload);
+  },
+  update: (id: number, data: Partial<Channel> | FormData) => {
+    if (data instanceof FormData) return api.upload(`channels/${id}`, data, 'PUT');
+    return api.put(`channels/${id}`, data);
+  },
   delete: (id: number) => api.delete(`channels/${id}`),
   subscribe: (channelId: number, userId: number) => 
     api.post(`channels/${channelId}/subscribe`, { userID: userId }),

@@ -16,6 +16,7 @@ interface VideoFormData {
   title: string;
   description: string;
   file?: File;
+  thumbnail?: File;
   tags: string[];
   playlistID?: number;
 }
@@ -123,6 +124,17 @@ const Upload: React.FC = () => {
     }
   };
 
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select a valid image file for thumbnail');
+        return;
+      }
+      setFormData((prev) => ({ ...prev, thumbnail: file }));
+    }
+  };
+
   const addTag = (tagName: string) => {
     if (!tagName.trim()) return;
     if (formData.tags.includes(tagName)) {
@@ -185,6 +197,10 @@ const Upload: React.FC = () => {
 
       if (formData.playlistID) {
         uploadFormData.append('playlistID', formData.playlistID.toString());
+      }
+
+      if (formData.thumbnail) {
+        uploadFormData.append('thumbnail', formData.thumbnail);
       }
 
       setUploadProgress(25);
@@ -254,34 +270,34 @@ const Upload: React.FC = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="upload-form">
-            <div className="form-section">
-              <label className="form-label">Video Title *</label>
+            <div className="upload-field">
+              <label className="upload-label">Video Title *</label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 placeholder="Enter video title"
-                className="form-input"
+                className="upload-input"
                 disabled={uploading}
               />
             </div>
 
-            <div className="form-section">
-              <label className="form-label">Description</label>
+            <div className="upload-field">
+              <label className="upload-label">Description</label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
                 placeholder="Enter video description"
-                className="form-textarea"
+                className="upload-textarea"
                 rows={4}
                 disabled={uploading}
               />
             </div>
 
-            <div className="form-section">
-              <label className="form-label">Video File *</label>
+            <div className="upload-field">
+              <label className="upload-label">Video File *</label>
               <div className="file-upload">
                 <input
                   type="file"
@@ -311,8 +327,40 @@ const Upload: React.FC = () => {
               </div>
             </div>
 
-            <div className="form-section">
-              <label className="form-label">Playlist (Optional)</label>
+            <div className="upload-field">
+              <label className="upload-label">Custom Thumbnail (Optional)</label>
+              <div className="file-upload">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleThumbnailChange}
+                  className="file-input"
+                  id="thumbnail-file-input"
+                  disabled={uploading}
+                />
+                <label htmlFor="thumbnail-file-input" className="file-upload-area">
+                  <FaUpload className="upload-icon" />
+                  <p>
+                    {formData.thumbnail ? (
+                      <>
+                        <FaCheck className="check-icon" /> {formData.thumbnail.name}
+                      </>
+                    ) : (
+                      <>Click to select a thumbnail image, or we will auto-generate one</>
+                    )}
+                  </p>
+                  {formData.thumbnail && (
+                    <span className="file-size">
+                      ({(formData.thumbnail.size / (1024 * 1024)).toFixed(2)} MB)
+                    </span>
+                  )}
+                </label>
+              </div>
+              <p className="upload-hint">If you skip this, a frame from the video will be used as the thumbnail.</p>
+            </div>
+
+            <div className="upload-field">
+              <label className="upload-label">Playlist (Optional)</label>
               <select
                 name="playlistID"
                 value={formData.playlistID || ''}
@@ -320,21 +368,21 @@ const Upload: React.FC = () => {
                   ...prev, 
                   playlistID: e.target.value ? Number(e.target.value) : undefined 
                 }))}
-                className="form-input"
+                className="upload-input"
                 disabled={uploading}
               >
                 <option value="">No Playlist (Independent)</option>
                 {playlists.map((playlist) => (
-                  <option key={playlist.id} value={playlist.id}>
+                  <option key={playlist.id ?? playlist.pID ?? playlist.name} value={playlist.id ?? playlist.pID}>
                     {playlist.name}
                   </option>
                 ))}
               </select>
-              <p className="form-hint">You can add this video to a playlist later by editing it</p>
+              <p className="upload-hint">You can add this video to a playlist later by editing it</p>
             </div>
 
-            <div className="form-section">
-              <label className="form-label">Tags</label>
+            <div className="upload-field">
+              <label className="upload-label">Tags</label>
               <div className="tags-container">
                 {formData.tags.map((tag) => (
                   <div key={tag} className="tag-chip">
@@ -370,7 +418,7 @@ const Upload: React.FC = () => {
                       searchTags(e.target.value);
                     }}
                     placeholder="Search existing tags..."
-                    className="form-input"
+                    className="upload-input"
                     disabled={uploading}
                   />
                   
@@ -396,7 +444,7 @@ const Upload: React.FC = () => {
                         value={newTagName}
                         onChange={(e) => setNewTagName(e.target.value)}
                         placeholder="Enter new tag name"
-                        className="form-input"
+                        className="upload-input"
                         disabled={uploading}
                       />
                       <button

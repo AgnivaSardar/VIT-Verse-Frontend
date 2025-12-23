@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaSearch, FaTimes } from 'react-icons/fa';
 import { videosApi } from '../../services/videosApi';
 import { playlistsApi } from '../../services/playlistsApi';
+import { channelsApi } from '../../services/channelsApi';
 import '../../styles/search-bar.css';
 
 interface SearchSuggestion {
@@ -11,6 +12,7 @@ interface SearchSuggestion {
   title: string;
   subtitle?: string;
   icon: string;
+  channelId?: number;
 }
 
 const SearchBar: React.FC = () => {
@@ -51,6 +53,7 @@ const SearchBar: React.FC = () => {
                 title: video.title || 'Untitled',
                 subtitle: video.channelName || 'Unknown channel',
                 icon: '🎬',
+                channelId: video.channelId || video.channelID,
               });
             }
           });
@@ -74,6 +77,7 @@ const SearchBar: React.FC = () => {
                 title: playlist.name || 'Untitled Playlist',
                 subtitle: `by ${playlist.user?.userName || 'Unknown'}`,
                 icon: '📋',
+                channelId: playlist.channelId || playlist.channelID || playlist.user?.userID,
               });
             }
           });
@@ -81,9 +85,32 @@ const SearchBar: React.FC = () => {
           console.error('Error fetching playlists:', err);
         }
 
-        // Sort suggestions: videos first, then playlists, and limit to 8
+        // Fetch channels
+        try {
+          const channelsResponse = await channelsApi.getAll();
+          const channels = (channelsResponse as any)?.data || channelsResponse || [];
+
+          channels.slice(0, 20).forEach((channel: any) => {
+            if (
+              channel.channelName?.toLowerCase().includes(lowerQuery) ||
+              channel.channelDescription?.toLowerCase().includes(lowerQuery)
+            ) {
+              allSuggestions.push({
+                type: 'channel',
+                id: channel.channelID || channel.id || 0,
+                title: channel.channelName || 'Channel',
+                subtitle: channel.channelDescription || 'Channel',
+                icon: '📡',
+              });
+            }
+          });
+        } catch (err) {
+          console.error('Error fetching channels:', err);
+        }
+
+        // Sort suggestions: videos first, then playlists, then channels, and limit to 8
         allSuggestions.sort((a, b) => {
-          const typeOrder = { video: 0, playlist: 1, channel: 2 };
+          const typeOrder = { video: 0, playlist: 1, channel: 2 } as Record<string, number>;
           return typeOrder[a.type] - typeOrder[b.type];
         });
 

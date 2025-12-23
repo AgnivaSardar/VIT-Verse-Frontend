@@ -9,20 +9,41 @@ import { tagsApi, type Tag } from '../services/tagsApi';
 import type { Video as ApiVideo } from '../types/video';
 import '../styles/layout.css';
 import '../styles/video-grid.css';
+import '../styles/search.css';
 
-const mapVideo = (video: ApiVideo, index: number): Video => ({
-  id: video.id ?? (video as any)?.videoID ?? index,
-  title: video.title ?? 'Untitled video',
-  description: video.description,
-  thumbnail: video.thumbnail,
-  duration: video.duration ?? 0,
-  channelName: video.channelName ?? 'Unknown channel',
-  channelImage: video.channelImage,
-  views: video.views ?? 0,
-  uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
-  badge: video.badge,
-  channelId: video.channelId ?? (video as any)?.channelID,
-});
+const mapVideo = (video: any, index: number): Video => {
+  const channelObj = video.channel || video.Channel || video.channelInfo;
+  const channelId = video.channelId ?? video.channelID ?? channelObj?.channelID ?? channelObj?.id;
+  const channelName =
+    video.channelName ||
+    channelObj?.channelName ||
+    channelObj?.name ||
+    channelObj?.user?.userName ||
+    'Unknown channel';
+  const channelImage = video.channelImage || channelObj?.channelImage || channelObj?.image;
+
+  // Prefer backend primary key `vidID` and normalize to number
+  const rawId = video.vidID ?? video.videoID ?? video.id;
+  const parsedId =
+    typeof rawId === 'string' ? parseInt(rawId, 10) : Number(rawId);
+
+  const thumb = video.thumbnail || video.images?.[0]?.imgURL;
+
+  return {
+    // Avoid 0 by falling back to index + 1 only when missing
+    id: Number.isFinite(parsedId) && !Number.isNaN(parsedId) ? parsedId : index + 1,
+    title: video.title ?? 'Untitled video',
+    description: video.description,
+    thumbnail: thumb,
+    duration: video.duration ?? 0,
+    channelName,
+    channelImage,
+    views: video.views ?? 0,
+    uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
+    badge: video.badge,
+    channelId,
+  };
+};
 
 function unwrap<T>(resp: any): T {
   if (resp && typeof resp === 'object' && 'data' in resp) {
@@ -93,6 +114,8 @@ const Home: React.FC = () => {
       <main className="home-main">
         <CategoryTags tags={tags} activeTag={activeTag} onTagChange={setActiveTag} />
 
+
+        {/* All/Filtered Videos */}
         {loading ? (
           <div className="loading">Loading videos...</div>
         ) : (

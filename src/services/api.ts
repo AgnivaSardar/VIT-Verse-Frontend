@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export interface ApiResponse<T> {
   data: T;
@@ -7,7 +7,10 @@ export interface ApiResponse<T> {
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('authToken');
-  const headers: Record<string, string> = { 'Content-Type': 'application/json', 'x-bypass-rate-limit': '1' };
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'x-bypass-rate-limit': '1'
+  };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -16,7 +19,9 @@ const getAuthHeaders = () => {
 
 const getAuthHeadersNoContentType = () => {
   const token = localStorage.getItem('authToken');
-  const headers: Record<string, string> = { 'x-bypass-rate-limit': '1' };
+  const headers: Record<string, string> = {
+    'x-bypass-rate-limit': '1'
+  };
   if (token) {
     headers.Authorization = `Bearer ${token}`;
   }
@@ -24,6 +29,11 @@ const getAuthHeadersNoContentType = () => {
 };
 
 const handleResponse = async (response: Response) => {
+  // Allow 304 Not Modified as a soft success with no body
+  if (response.status === 304) {
+    return { data: null } as { data: any; message?: string };
+  }
+
   if (!response.ok) {
     if (response.status === 401) {
       localStorage.removeItem('authToken');
@@ -31,7 +41,18 @@ const handleResponse = async (response: Response) => {
     }
     throw new Error(`HTTP Error: ${response.status}`);
   }
-  const parsed = await response.json();
+
+  // No content (204/205) should not attempt JSON parsing
+  if (response.status === 204 || response.status === 205) {
+    return { data: null } as { data: any; message?: string };
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return { data: null } as { data: any; message?: string };
+  }
+
+  const parsed = JSON.parse(text);
   // Normalize response: if backend returns raw object, wrap as { data: ... }
   if (parsed && typeof parsed === 'object' && 'data' in parsed) {
     return parsed;
@@ -48,6 +69,7 @@ const api = {
   get: <T>(endpoint: string) =>
     fetch(buildUrl(endpoint), {
       headers: getAuthHeaders(),
+      cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
   post: <T>(endpoint: string, body: any) =>
@@ -55,6 +77,7 @@ const api = {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(body),
+      cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
   put: <T>(endpoint: string, body: any) =>
@@ -62,12 +85,22 @@ const api = {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(body),
+      cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
   delete: <T>(endpoint: string) =>
     fetch(buildUrl(endpoint), {
       method: 'DELETE',
       headers: getAuthHeaders(),
+      cache: 'no-store',
+    }).then(handleResponse) as Promise<ApiResponse<T>>,
+
+  deleteWithBody: <T>(endpoint: string, body: any) =>
+    fetch(buildUrl(endpoint), {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(body),
+      cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
   patch: <T>(endpoint: string, body?: any) =>
@@ -75,14 +108,16 @@ const api = {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: body ? JSON.stringify(body) : undefined,
+      cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
-  upload: (endpoint: string, formData: FormData) => {
+  upload: (endpoint: string, formData: FormData, method: 'POST' | 'PUT' = 'POST') => {
     const headers = getAuthHeadersNoContentType();
     return fetch(buildUrl(endpoint), {
-      method: 'POST',
+      method,
       headers,
       body: formData,
+      cache: 'no-store',
     }).then(handleResponse);
   },
 

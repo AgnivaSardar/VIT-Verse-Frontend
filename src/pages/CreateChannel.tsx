@@ -24,6 +24,7 @@ const CreateChannel: React.FC = () => {
     channelDescription: '',
     channelType: 'public' as 'public' | 'private' | 'protected',
     isPremium: false,
+    channelLogo: null as File | null,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -32,6 +33,11 @@ const CreateChannel: React.FC = () => {
       ...prev,
       [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value,
     }));
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setFormData((prev) => ({ ...prev, channelLogo: file }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,13 +50,16 @@ const CreateChannel: React.FC = () => {
 
     setLoading(true);
     try {
-      // Send only the channel data, userID will be added by backend from auth
-      await channelsApi.create({
-        channelName: formData.channelName,
-        channelDescription: formData.channelDescription,
-        channelType: formData.channelType,
-        isPremium: formData.isPremium,
-      } as any);
+      const payload = new FormData();
+      payload.append('channelName', formData.channelName);
+      payload.append('channelDescription', formData.channelDescription);
+      payload.append('channelType', formData.channelType);
+      payload.append('isPremium', String(formData.isPremium));
+      if (formData.channelLogo) {
+        payload.append('channelLogo', formData.channelLogo);
+      }
+
+      await channelsApi.create(payload as any);
       toast.success('Channel created successfully!');
       navigate('/upload');
     } catch (error: any) {
@@ -119,6 +128,18 @@ const CreateChannel: React.FC = () => {
                 <option value="protected">Protected (Only subscribed members)</option>
               </select>
               <p className="form-hint">Choose who can access your channel and videos</p>
+            </div>
+
+            <div className="form-section">
+              <label className="form-label">Channel Logo</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFile}
+                className="form-input"
+                disabled={loading}
+              />
+              <p className="form-hint">Optional. PNG/JPEG/WebP up to 5MB.</p>
             </div>
 
             <div className="form-section checkbox">

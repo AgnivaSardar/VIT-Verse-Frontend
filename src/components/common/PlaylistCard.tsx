@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { PlaylistDetail } from '../../services/playlistsApi';
 import '../../styles/video-card.css';
 import '../../styles/playlist-card.css';
@@ -17,9 +17,16 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
   playlist,
   channelName,
 }) => {
+  const navigate = useNavigate();
   const playlistId = getPlaylistId(playlist);
   const firstVideo = playlist.videos?.[0];
   const videoCount = playlist.videos?.length || 0;
+  const channelId =
+    (playlist as any).channelId ||
+    (playlist as any).channelID ||
+    (playlist.user as any)?.userID ||
+    firstVideo?.video?.channelID ||
+    (firstVideo as any)?.channelId;
   
   const getThumbnailUrl = () => {
     if (firstVideo?.video?.thumbnail) {
@@ -39,6 +46,13 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
   };
 
   const displayChannelName = channelName || playlist.user?.userName || 'Playlist';
+
+  const handleChannelClick = (e: React.MouseEvent) => {
+    if (!channelId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/channel/${channelId}`);
+  };
 
   return (
     <Link
@@ -63,6 +77,8 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
             src={`https://ui-avatars.com/api/?name=${displayChannelName}&background=1f2937&color=e5e7eb`}
             className="chan-img"
             alt={displayChannelName}
+            onClick={handleChannelClick}
+            style={{ cursor: channelId ? 'pointer' : 'default' }}
           />
         </div>
       </div>

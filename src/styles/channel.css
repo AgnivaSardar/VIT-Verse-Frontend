@@ -29,6 +29,9 @@
   color: #3b82f6;
   border: 3px solid var(--border);
   flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 .channel-details {
@@ -228,6 +231,52 @@
 .playlist-btn.delete:hover {
   background: #dc2626;
   color: #ffffff;
+}
+
+/* Manage videos panel inside edit tab */
+.manage-videos-panel {
+  margin-top: 20px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.manage-videos-panel h4 {
+  margin: 0 0 12px 0;
+  color: var(--text-main);
+}
+
+.video-manage-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.video-manage-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-tertiary);
+}
+
+.video-manage-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.video-manage-info .video-title {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.video-manage-info .video-meta {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 /* Statistics Tab */

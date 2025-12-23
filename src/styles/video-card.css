@@ -75,6 +75,19 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.chan-img-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.chan-img-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
 .video-card .details {
   min-width: 0;
 }

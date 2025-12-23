@@ -1,14 +1,25 @@
 /* Sidebar Navigation Styles */
 aside .nav-link svg {
-  width: 20px;
-  height: 20px;
+  width: 12px;
+  height: 12px;
   color: #9aa5c3;
   transition: color 0.2s ease;
+  flex-shrink: 0;
 }
 
 aside .nav-link:hover svg,
 aside .nav-link.active svg {
   color: #60a5fa;
+}
+
+aside .section-title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #6b7280;
+  margin: 8px 0 4px 0;
+  padding: 0 6px;
+  letter-spacing: 0.04em;
 }
 
 .nav-link.muted {
@@ -19,6 +30,9 @@ aside .nav-link.active svg {
 hr {
   opacity: 0.3;
   border-color: rgba(59, 130, 246, 0.2);
+  margin: 8px 0;
+  border: none;
+  border-top: 1px solid currentColor;
 }
 
 @media (max-width: 768px) {
@@ -29,4 +43,35 @@ hr {
   .nav-link {
     justify-content: center;
   }
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 12px 8px;
+  margin-top: 8px;
+}
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.footer-link {
+  font-size: 0.75rem;
+  color: #606060;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #60a5fa;
+}
+
+.footer-copyright {
+  font-size: 0.7rem;
+  color: #909090;
+  margin-top: 8px;
+  font-weight: 500;
 }

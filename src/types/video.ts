@@ -7,6 +7,8 @@ export interface Video {
   channelName: string;
   channelId?: number;
   channelImage?: string;
+  channelDescription?: string;
+  channelSubscribers?: number;
   views: number;
   uploadedAt: string;
   badge?: string;

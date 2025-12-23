@@ -4,10 +4,13 @@ import toast from 'react-hot-toast';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import VideoCard, { type Video } from '../components/common/VideoCard';
+import ChannelCard from '../components/common/ChannelCard';
 import PlaylistCard from '../components/common/PlaylistCard';
 import { videosApi } from '../services/videosApi';
 import { playlistsApi, type PlaylistDetail } from '../services/playlistsApi';
+import { channelsApi } from '../services/channelsApi';
 import type { Video as ApiVideo } from '../types/video';
+import type { Channel } from '../types';
 import '../styles/layout.css';
 import '../styles/video-grid.css';
 import '../styles/search.css';
@@ -23,6 +26,8 @@ const Search: React.FC = () => {
   const [searchParams] = useSearchParams();
   const [videoResults, setVideoResults] = useState<Video[]>([]);
   const [playlistResults, setPlaylistResults] = useState<PlaylistDetail[]>([]);
+  type ChannelResult = Channel & { channelImage?: string; image?: string; channelThumbnail?: string; subscribers?: number };
+  const [channelResults, setChannelResults] = useState<ChannelResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   const query = searchParams.get('q') || '';
@@ -30,29 +35,69 @@ const Search: React.FC = () => {
   const handleSearch = async () => {
     setLoading(true);
     try {
+      const lowerQuery = query.toLowerCase();
       // Search videos
       const videosResponse = await videosApi.getAll();
       const videosData = unwrap<ApiVideo[] | undefined>(videosResponse) || [];
-      const normalized = (videosData || []).map((video) => ({
-        id: video.id ?? 0,
-        title: video.title ?? 'Untitled video',
-        description: video.description,
-        thumbnail: video.thumbnail,
-        duration: video.duration ?? 0,
-        channelName: video.channelName ?? 'Unknown channel',
-        channelImage: video.channelImage,
-        views: video.views ?? 0,
-        uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
-        badge: video.badge,
-        channelId: video.channelId ?? (video as any)?.channelID,
-      }));
+      const normalized = (videosData || []).map((video: any) => {
+        const channelObj = video.channel || video.Channel || video.channelInfo;
+        return {
+          id: video.id ?? 0,
+          title: video.title ?? 'Untitled video',
+          description: video.description,
+          thumbnail: video.thumbnail,
+          duration: video.duration ?? 0,
+          channelName:
+            video.channelName ||
+            channelObj?.channelName ||
+            channelObj?.name ||
+            channelObj?.user?.userName ||
+            'Unknown channel',
+          channelImage: video.channelImage || channelObj?.channelImage || channelObj?.image,
+          views: video.views ?? 0,
+          uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
+          badge: video.badge,
+          channelId: video.channelId ?? video.channelID ?? channelObj?.channelID ?? channelObj?.id,
+        } as Video;
+      });
 
       const filteredVideos = normalized.filter((video) =>
         `${video.title} ${video.channelName} ${video.description ?? ''}`
           .toLowerCase()
-          .includes(query.toLowerCase())
+          .includes(lowerQuery)
       );
       setVideoResults(filteredVideos);
+
+      // Search channels
+      try {
+        const channelsResponse = await channelsApi.getAll();
+        const channelsData = unwrap<any[] | undefined>(channelsResponse) || [];
+        const mappedChannels: ChannelResult[] = channelsData.map((ch) => ({
+          channelID: ch.channelID ?? ch.id,
+          id: ch.id ?? ch.channelID,
+          userID: ch.userID,
+          channelName: ch.channelName ?? ch.name ?? 'Channel',
+          channelDescription: ch.channelDescription ?? ch.description ?? '',
+          channelType: (ch.channelType as Channel['channelType']) ?? 'public',
+          channelSubscribers: ch.channelSubscribers ?? ch.subscribers,
+          subscribers: ch.subscribers ?? ch.channelSubscribers,
+          isPremium: ch.isPremium,
+          channelImage: ch.channelImage || ch.channelThumbnail || ch.image,
+          channelThumbnail: ch.channelThumbnail,
+          image: ch.image || ch.channelImage,
+        }));
+
+        const filteredChannels = mappedChannels.filter((channel) =>
+          `${channel.channelName} ${channel.channelDescription}`
+            .toLowerCase()
+            .includes(lowerQuery)
+        );
+
+        setChannelResults(filteredChannels);
+      } catch (error) {
+        console.error('Channel search error:', error);
+        setChannelResults([]);
+      }
 
       // Search all public playlists (no authentication required)
       try {
@@ -62,7 +107,7 @@ const Search: React.FC = () => {
         const filteredPlaylists = allPlaylists.filter((playlist) =>
           `${playlist.name} ${playlist.description || ''}`
             .toLowerCase()
-            .includes(query.toLowerCase())
+            .includes(lowerQuery)
         );
         
         setPlaylistResults(filteredPlaylists);
@@ -88,7 +133,7 @@ const Search: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  const hasResults = videoResults.length > 0 || playlistResults.length > 0;
+  const hasResults = videoResults.length > 0 || playlistResults.length > 0 || channelResults.length > 0;
 
   return (
     <div className="app-container">
@@ -101,6 +146,21 @@ const Search: React.FC = () => {
           <div className="loading">Searching...</div>
         ) : hasResults ? (
           <>
+            {/* Channels Section */}
+            {channelResults.length > 0 && (
+              <section className="search-section">
+                <h2 className="section-title">Channels ({channelResults.length})</h2>
+                <div className="channel-strip" role="list">
+                  {channelResults.map((channel) => (
+                    <ChannelCard
+                      key={channel.channelID || channel.id}
+                      channel={channel}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Playlists Section */}
             {playlistResults.length > 0 && (
               <section className="search-section">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import '../../styles/video-card.css';
 
 export interface Video {
@@ -18,9 +18,13 @@ export interface Video {
 
 interface VideoCardProps {
   video: Video;
+  // Optional override for destination URL (e.g., add query params)
+  to?: string;
 }
 
-const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
+const VideoCard: React.FC<VideoCardProps> = ({ video, to }) => {
+  const navigate = useNavigate();
+
   const formatDuration = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -48,7 +52,9 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
     }
     // Greyscale palette fallback when no thumbnail
     const colors = ['#0f172a', '#111827', '#1f2937', '#2d3748', '#374151'];
-    const color = colors[video.id % colors.length];
+    const numericId = Number(video.id);
+    const idx = Number.isFinite(numericId) ? Math.abs(numericId) % colors.length : 0;
+    const color = colors[idx] || '#1f2937';
     return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='160'%3E%3Crect fill='${color.replace('#', '%23')}' width='280' height='160'/%3E%3C/svg%3E`;
   };
 
@@ -58,8 +64,17 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
+  const handleChannelClick = (e: React.MouseEvent) => {
+    if (!video.channelId) return;
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/channel/${video.channelId}`);
+  };
+
+  const href = to || `/video/${video.id}`;
+
   return (
-    <Link to={`/video/${video.id}`} className="video-card-link">
+    <Link to={href} className="video-card-link">
       <div className="video-card">
         <div className="thumbnail" style={{ backgroundImage: `url(${getThumbnailUrl()})` }}>
           <span className="duration">{formatDuration(video.duration)}</span>
@@ -73,14 +88,22 @@ const VideoCard: React.FC<VideoCardProps> = ({ video }) => {
             </p>
             <p>{formatViews(video.views)} views • {formatUploadedDate(video.uploadedAt)}</p>
           </div>
-          <img
-            src={
-              video.channelImage ||
-              `https://ui-avatars.com/api/?name=${video.channelName}&background=1f2937&color=e5e7eb`
-            }
-            className="chan-img"
-            alt={video.channelName}
-          />
+          <button
+            type="button"
+            className="chan-img-btn"
+            onClick={handleChannelClick}
+            aria-label={`Go to ${video.channelName} channel`}
+            disabled={!video.channelId}
+          >
+            <img
+              src={
+                video.channelImage ||
+                `https://ui-avatars.com/api/?name=${video.channelName}&background=1f2937&color=e5e7eb`
+              }
+              className="chan-img"
+              alt={video.channelName}
+            />
+          </button>
         </div>
       </div>
     </Link>

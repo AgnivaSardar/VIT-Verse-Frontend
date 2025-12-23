@@ -25,7 +25,11 @@ function getPlaylistId(playlist: any): number {
   return Number(playlist.pID || playlist.id);
 }
 
-type TabType = 'videos' | 'playlists' | 'statistics' | 'edit';
+function getVideoId(video: any): number {
+  return Number(video.vidID ?? video.vidId ?? video.id ?? 0);
+}
+
+type TabType = 'videos' | 'playlists' | 'about' | 'statistics' | 'edit';
 
 const Channel: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -44,6 +48,11 @@ const Channel: React.FC = () => {
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; playlistId?: number; playlistName?: string }>({
     show: false,
   });
+  const [deleteVideoModal, setDeleteVideoModal] = useState<{ show: boolean; vidId?: number; title?: string }>({
+    show: false,
+  });
+  const [deletingVideoId, setDeletingVideoId] = useState<number | null>(null);
+  const [stats, setStats] = useState<{ totalVideos: number; totalViews: number; totalLikes: number; totalComments: number; totalShares: number; subscribers: number; totalPlaylists: number; monthlyViews: { month: string; count: number }[] } | null>(null);
 
   useEffect(() => {
     if (!channelId) return;
@@ -70,7 +79,8 @@ const Channel: React.FC = () => {
             return Number(chanId) === channelId;
           })
           .map((vid) => ({
-            id: vid.id ?? 0,
+            id: vid.vidID ?? vid.id ?? 0,
+            vidID: vid.vidID ?? vid.id ?? 0,
             title: vid.title ?? 'Untitled video',
             description: vid.description,
             thumbnail: vid.thumbnail,
@@ -84,35 +94,42 @@ const Channel: React.FC = () => {
           } as Video));
         setVideos(mapped);
 
-        // Always load playlists (for all users to see)
+        // Load playlists created by this channel's owner only
         if (channelData) {
           try {
-            const playlistsRes = await playlistsApi.getMyPlaylists();
-            const playlistData = unwrap<Playlist[]>(playlistsRes) || [];
+            const playlistsRes = await playlistsApi.getAll();
+            const allPlaylists = unwrap<PlaylistDetail[] | undefined>(playlistsRes) || [];
 
-            const playlistsWithDetails = await Promise.all(
-              playlistData.map(async (playlist) => {
-                const playlistId = getPlaylistId(playlist);
-                if (!playlistId) return { ...playlist } as PlaylistDetail;
-                try {
-                  const detailRes = await playlistsApi.getById(playlistId);
-                  return unwrap<PlaylistDetail>(detailRes);
-                } catch (error) {
-                  console.error('Failed to fetch playlist detail', error);
-                  return { ...playlist, id: playlistId } as PlaylistDetail;
-                }
-              })
-            );
+            const filtered = allPlaylists.filter((pl: any) => {
+              const ownerUserID = pl.userID ?? pl.user?.userID;
+              const plChannelID = pl.channelID ?? pl.channelId;
+              return (
+                (ownerUserID && Number(ownerUserID) === Number(channelData.userID)) ||
+                (plChannelID && Number(plChannelID) === Number(channelId))
+              );
+            });
 
-            setPlaylists(playlistsWithDetails);
+            setPlaylists(filtered);
           } catch (error) {
             console.error('Failed to load playlists:', error);
             setPlaylists([]);
           }
         }
 
-        // Mock subscriber count (you can replace with actual API call)
-        setSubscriberCount(Math.floor(Math.random() * 10000));
+        // Use actual subscriber count from channel
+        // Use actual subscriber count from channel
+        setSubscriberCount(Number(channelData?.channelSubscribers ?? 0));
+
+        // Fetch stats only for owner
+        if (user && channelData && channelData.userID === user.id) {
+          try {
+            const res = await (channelsApi as any).getStats?.(channelId);
+            const data = unwrap<any>(res);
+            if (data) setStats(data);
+          } catch (e) {
+            // ignore errors; stats optional
+          }
+        }
       } catch (error) {
         toast.error('Failed to load channel');
         console.error(error);
@@ -123,6 +140,23 @@ const Channel: React.FC = () => {
 
     load();
   }, [channelId, user]);
+
+  // Initialize subscribed state
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (!user || !channelId) return;
+      try {
+        const res = await (await import('../services/subscriptionsApi')).subscriptionsApi.mine();
+        const list = unwrap<any[]>(res) || [];
+        const found = list.some((c: any) => Number(c.id ?? c.channelID) === Number(channelId));
+        if (mounted) setSubscribed(found);
+      } catch (e) {
+        // silent
+      }
+    })();
+    return () => { mounted = false; };
+  }, [user, channelId]);
 
   const handleSubscribe = async () => {
     if (!user) {
@@ -161,6 +195,31 @@ const Channel: React.FC = () => {
     setDeleteModal({ show: false });
   };
 
+  const openDeleteVideoModal = (vidId: number, title?: string) => {
+    setDeleteVideoModal({ show: true, vidId, title });
+  };
+
+  const closeDeleteVideoModal = () => {
+    setDeleteVideoModal({ show: false });
+  };
+
+  const confirmDeleteVideo = async () => {
+    const vidId = deleteVideoModal.vidId;
+    if (!vidId) return;
+    try {
+      setDeletingVideoId(vidId);
+      await videosApi.delete(vidId);
+      setVideos((prev) => prev.filter((v) => getVideoId(v) !== vidId));
+      toast.success('Video deleted');
+      closeDeleteVideoModal();
+    } catch (error) {
+      toast.error('Failed to delete video');
+      console.error(error);
+    } finally {
+      setDeletingVideoId(null);
+    }
+  };
+
   return (
     <div className="app-container">
       <Header />
@@ -176,8 +235,15 @@ const Channel: React.FC = () => {
             {/* Channel Header */}
             <div className="channel-header">
               <div className="channel-info">
-                <div className="channel-avatar">
-                  {channel.channelName?.charAt(0).toUpperCase() || 'C'}
+                <div
+                  className="channel-avatar"
+                  style={
+                    channel.channelImage
+                      ? { backgroundImage: `url(${channel.channelImage})` }
+                      : undefined
+                  }
+                >
+                  {!channel.channelImage && (channel.channelName?.charAt(0).toUpperCase() || 'C')}
                 </div>
                 <div className="channel-details">
                   <h1>{channel.channelName}</h1>
@@ -236,11 +302,19 @@ const Channel: React.FC = () => {
                 Playlists
               </button>
               <button
-                className={`tab-button ${activeTab === 'statistics' ? 'active' : ''}`}
-                onClick={() => setActiveTab('statistics')}
+                className={`tab-button ${activeTab === 'about' ? 'active' : ''}`}
+                onClick={() => setActiveTab('about')}
               >
-                Statistics
+                About
               </button>
+              {isOwner && (
+                <button
+                  className={`tab-button ${activeTab === 'statistics' ? 'active' : ''}`}
+                  onClick={() => setActiveTab('statistics')}
+                >
+                  Statistics
+                </button>
+              )}
               {isOwner && (
                 <button
                   className={`tab-button ${activeTab === 'edit' ? 'active' : ''}`}
@@ -298,40 +372,51 @@ const Channel: React.FC = () => {
                 </div>
               )}
 
-              {activeTab === 'statistics' && (
+              {activeTab === 'about' && (
+                <div className="about-section">
+                  <h3>About {channel?.channelName}</h3>
+                  <p style={{ marginBottom: 12 }}>{channel?.channelDescription || 'No description provided.'}</p>
+                  <div className="about-grid">
+                    <div className="about-item"><strong>Type:</strong> {channel?.channelType || 'public'}</div>
+                    <div className="about-item"><strong>Joined:</strong> {new Date((channel as any)?.createdAt || Date.now()).toLocaleDateString()}</div>
+                    <div className="about-item"><strong>Subscribers:</strong> {subscriberCount.toLocaleString()}</div>
+                    <div className="about-item"><strong>Videos:</strong> {videos.length}</div>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'statistics' && isOwner && (
                 <>
                   <div className="stats-container">
                     <div className="stat-card">
                       <h3>Total Videos</h3>
-                      <p className="value">{videos.length}</p>
+                      <p className="value">{(stats?.totalVideos ?? videos.length).toLocaleString()}</p>
                     </div>
                     <div className="stat-card">
                       <h3>Total Views</h3>
-                      <p className="value">
-                        {videos.reduce((acc, v) => acc + (v.views || 0), 0).toLocaleString()}
-                      </p>
+                      <p className="value">{(stats?.totalViews ?? videos.reduce((acc, v) => acc + (v.views || 0), 0)).toLocaleString()}</p>
                     </div>
                     <div className="stat-card">
                       <h3>Subscribers</h3>
-                      <p className="value">{subscriberCount.toLocaleString()}</p>
+                      <p className="value">{(stats?.subscribers ?? subscriberCount).toLocaleString()}</p>
                     </div>
                     <div className="stat-card">
                       <h3>Total Playlists</h3>
-                      <p className="value">{playlists.length}</p>
+                      <p className="value">{(stats?.totalPlaylists ?? playlists.length).toLocaleString()}</p>
                     </div>
                     <div className="stat-card">
                       <h3>Average Views</h3>
                       <p className="value">
-                        {videos.length > 0
-                          ? Math.round(
-                              videos.reduce((acc, v) => acc + (v.views || 0), 0) / videos.length
-                            ).toLocaleString()
-                          : 0}
+                        {(() => {
+                          const tv = stats?.totalViews ?? videos.reduce((acc, v) => acc + (v.views || 0), 0);
+                          const count = stats?.totalVideos ?? videos.length;
+                          return count > 0 ? Math.round(tv / count).toLocaleString() : '0';
+                        })()}
                       </p>
                     </div>
                     <div className="stat-card">
                       <h3>Total Comments</h3>
-                      <p className="value">{Math.floor(Math.random() * 500)}</p>
+                      <p className="value">{(stats?.totalComments ?? 0).toLocaleString()}</p>
                     </div>
                   </div>
 
@@ -339,20 +424,18 @@ const Channel: React.FC = () => {
                   <div className="stats-chart">
                     <h3>Monthly Views</h3>
                     <div className="chart-container">
-                      {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map(
-                        (month) => {
-                          const height = Math.random() * 80 + 20;
-                          const views = Math.floor(Math.random() * 5000 + 1000);
-                          return (
-                            <div key={month} className="chart-bar-wrapper">
-                              <div className="chart-bar" style={{ height: `${height}%` }}>
-                                <span className="bar-value">{views}</span>
-                              </div>
-                              <span className="bar-label">{month}</span>
+                      {(stats?.monthlyViews ?? []).map(({ month, count }) => {
+                        const heightPct = Math.min(100, Math.max(10, (count / Math.max(1, (stats?.totalViews ?? count))) * 100));
+                        return (
+                          <div key={month} className="chart-bar-wrapper">
+                            <div className="chart-bar" style={{ height: `${heightPct}%` }}>
+                              <span className="bar-value">{count}</span>
                             </div>
-                          );
-                        }
-                      )}
+                            <span className="bar-label">{month}</span>
+                          </div>
+                        );
+                      })}
+                      {!stats?.monthlyViews?.length && <div className="no-results">No monthly data</div>}
                     </div>
                   </div>
                 </>
@@ -384,6 +467,34 @@ const Channel: React.FC = () => {
                       Upload Video
                     </button>
                   </div>
+
+                  <div className="manage-videos-panel">
+                    <h4>Your Videos</h4>
+                    {!videos.length ? (
+                      <div className="no-results">No videos uploaded yet.</div>
+                    ) : (
+                      <div className="video-manage-list">
+                        {videos.map((v) => {
+                          const vidId = getVideoId(v);
+                          return (
+                            <div key={vidId || v.title} className="video-manage-row">
+                              <div className="video-manage-info">
+                                <div className="video-title">{v.title}</div>
+                                <div className="video-meta">{(v.views || 0).toLocaleString()} views · {v.uploadedAt}</div>
+                              </div>
+                              <button
+                                className="modal-btn confirm"
+                                onClick={() => openDeleteVideoModal(vidId, v.title)}
+                                disabled={deletingVideoId === vidId}
+                              >
+                                {deletingVideoId === vidId ? 'Deleting...' : 'Delete'}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -408,6 +519,29 @@ const Channel: React.FC = () => {
                   onClick={() => handleDeletePlaylist(deleteModal.playlistId!)}
                 >
                   Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {deleteVideoModal.show && (
+          <div className="modal-overlay" onClick={closeDeleteVideoModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <h2>Delete Video?</h2>
+              <p>
+                Are you sure you want to delete "{deleteVideoModal.title || 'this video'}"? This action cannot be undone.
+              </p>
+              <div className="modal-actions">
+                <button className="modal-btn cancel" onClick={closeDeleteVideoModal}>
+                  Cancel
+                </button>
+                <button
+                  className="modal-btn confirm"
+                  onClick={confirmDeleteVideo}
+                  disabled={deletingVideoId === deleteVideoModal.vidId}
+                >
+                  {deletingVideoId === deleteVideoModal.vidId ? 'Deleting...' : 'Delete'}
                 </button>
               </div>
             </div>

@@ -8,4 +8,5 @@ export interface Subscription {
 export const subscriptionsApi = {
   subscribe: (subscription: Subscription) => api.post('subscriptions', subscription),
   unsubscribe: (_subscription: Subscription) => api.delete('subscriptions'),
+  mine: () => api.get<any[]>('subscriptions/mine'),
 };

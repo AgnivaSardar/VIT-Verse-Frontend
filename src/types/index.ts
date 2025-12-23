@@ -9,6 +9,7 @@ export interface Channel {
   channelType: 'public' | 'private' | 'protected';
   channelSubscribers?: number;
   isPremium?: boolean;
+  channelImage?: string;
 }
 
 export interface User {

@@ -25,3 +25,28 @@ dist-ssr
 
 .env
 .env.local
+
+# Media files (videos and images)
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.mp4
+*.webm
+*.avi
+*.mov
+*.mkv
+*.flv
+*.wmv
+*.webp
+*.svg
+*.bmp
+*.tiff
+*.ico
+*.avif
+
+# Public media directories
+public/videos/
+public/images/
+public/thumbnails/
+public/uploads/

@@ -190,6 +190,7 @@ const PlaylistView: React.FC = () => {
               <div className="video-grid playlist-video-grid">
                 {playlist.videos.map((item, index) => {
                   const videoCard = mapToVideoCard(item, index);
+                  const to = `/video/${videoCard.id}?playlist=${playlistId}`;
                   return (
                     <div className="playlist-card-wrapper" key={item.pvID || videoCard.id}>
                       {isOwner && (
@@ -201,7 +202,7 @@ const PlaylistView: React.FC = () => {
                           ✕
                         </button>
                       )}
-                      <VideoCard video={videoCard} />
+                      <VideoCard video={videoCard} to={to} />
                     </div>
                   );
                 })}

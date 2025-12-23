@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   FaBars,
@@ -28,6 +28,7 @@ const Header: React.FC = () => {
   const [notifLoading, setNotifLoading] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userChannel, setUserChannel] = useState<Channel | null>(null);
+  const userMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
@@ -104,6 +105,18 @@ const Header: React.FC = () => {
     };
   }, []);
 
+  // Close user menu on outside click
+  useEffect(() => {
+    if (!showUserMenu) return;
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showUserMenu]);
+
   return (
     <header>
       <div className="logo-section">
@@ -145,7 +158,7 @@ const Header: React.FC = () => {
           )}
         </div>
 
-        <div className="icon-with-menu">
+        <div className="icon-with-menu" ref={userMenuRef}>
           <img
             src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=1f2937&color=e2e8f0`}
             className="user-avatar"
