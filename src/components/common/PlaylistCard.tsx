@@ -25,7 +25,6 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
     (playlist as any).channelId ||
     (playlist as any).channelID ||
     (playlist.user as any)?.userID ||
-    firstVideo?.video?.channelID ||
     (firstVideo as any)?.channelId;
   
   const getThumbnailUrl = () => {

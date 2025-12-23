@@ -423,6 +423,7 @@ aside.collapsed ~ main.video-detail-page {
   margin: 0;
   line-height: 1.3;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .sidebar-videos .details p {
@@ -430,6 +431,7 @@ aside.collapsed ~ main.video-detail-page {
   font-size: 0.8rem;
   color: #9aa5c3;
   -webkit-line-clamp: 1;
+  line-clamp: 1;
 }
 
 .sidebar-videos .chan-img-btn {

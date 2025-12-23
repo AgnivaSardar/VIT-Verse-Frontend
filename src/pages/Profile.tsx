@@ -45,7 +45,7 @@ const Profile: React.FC = () => {
         name: incoming?.name ?? incoming?.userName ?? incoming?.username ?? user?.name ?? '',
         email: incoming?.email ?? incoming?.userEmail ?? user?.email ?? '',
         role: (incoming?.role ?? user?.role ?? 'student') as ExtendedUser['role'],
-        phone: incoming?.phone ?? incoming?.userPhone ?? user?.phone ?? '',
+        phone: incoming?.phone ?? incoming?.userPhone ?? '',
         userPhone: incoming?.userPhone ?? incoming?.phone ?? '',
         studentRegID:
           incoming?.studentRegID ?? incoming?.student?.studentRegID ?? incoming?.registrationNumber ?? '',
@@ -54,10 +54,10 @@ const Profile: React.FC = () => {
         employeeID: incoming?.employeeID ?? incoming?.teacherID ?? incoming?.teacher?.teacherID ?? '',
         teacherID: incoming?.teacherID ?? incoming?.employeeID ?? incoming?.teacher?.teacherID ?? '',
         teacherSchool: incoming?.teacherSchool ?? incoming?.teacher?.teacherSchool ?? '',
-        isActive: incoming?.isActive ?? user?.isActive,
+        isActive: incoming?.isActive ?? false,
         isEmailVerified: incoming?.isEmailVerified ?? user?.isEmailVerified,
         isSuperAdmin: incoming?.isSuperAdmin ?? user?.isSuperAdmin,
-        createdAt: incoming?.createdAt ?? user?.createdAt,
+        createdAt: incoming?.createdAt ?? new Date(),
       }),
     [user]
   );
