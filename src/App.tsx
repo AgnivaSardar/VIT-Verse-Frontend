@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './features/auth/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Toaster } from 'react-hot-toast';
@@ -17,7 +17,7 @@ import EditPlaylist from './pages/EditPlaylist';
 import ChannelEdit from './pages/edit/ChannelEdit';
 import ProfileEdit from './pages/edit/ProfileEdit';
 import VideoEdit from './pages/edit/VideoEdit';
-import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminDashboard from './pages/AdminDashboard';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import About from './pages/footer/About';
@@ -28,6 +28,7 @@ import Terms from './pages/footer/Terms';
 import Privacy from './pages/footer/Privacy';
 import Policy from './pages/footer/Policy';
 import HowItWorks from './pages/footer/HowItWorks';
+import NotFound from './pages/NotFound';
 import './App.css';
 import './styles/layout.css';
 
@@ -51,7 +52,7 @@ function App() {
             <Route path="/playlists/create" element={<CreatePlaylist />} />
             <Route path="/playlists/:id/edit" element={<EditPlaylist />} />
             <Route path="/playlists/:id" element={<PlaylistView />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/channel/:id/edit" element={<ChannelEdit />} />
@@ -65,7 +66,7 @@ function App() {
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/policy" element={<Policy />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
       </Router>

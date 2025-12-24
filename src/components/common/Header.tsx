@@ -11,6 +11,7 @@ import {
   FaFilm,
   FaMoon,
   FaSun,
+  FaUserShield,
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
@@ -32,6 +33,14 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
+
+  // Debug: Log user object to check isSuperAdmin
+  useEffect(() => {
+    if (user) {
+      console.log('🔍 Header - User object:', user);
+      console.log('🔍 Header - isSuperAdmin:', user.isSuperAdmin);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -160,10 +169,13 @@ const Header: React.FC = () => {
 
         <div className="icon-with-menu" ref={userMenuRef}>
           <img
-            src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=1f2937&color=e2e8f0`}
+            src={
+              userChannel?.channelImage ||
+              `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=1f2937&color=e2e8f0`
+            }
             className="user-avatar"
             alt="Profile"
-            title="Profile"
+            title={userChannel ? `${userChannel.channelName}` : 'Profile'}
             onClick={handleAvatarClick}
           />
           {showUserMenu && (
@@ -204,6 +216,17 @@ const Header: React.FC = () => {
               <button className="dropdown-item" onClick={() => navigate('/upload')}>
                 <FaVideo /> Upload Video
               </button>
+              {(user?.isSuperAdmin === true || user?.role === 'admin') && (
+                <>
+                  <hr className="dropdown-divider" />
+                  <button className="dropdown-item admin-item" onClick={() => {
+                    console.log('🔍 Navigating to admin dashboard');
+                    navigate('/admin/dashboard');
+                  }}>
+                    <FaUserShield /> Admin Dashboard
+                  </button>
+                </>
+              )}
               <hr className="dropdown-divider" />
               <button className="dropdown-item" onClick={toggleTheme}>
                 {theme === 'light' ? <FaMoon /> : <FaSun />}

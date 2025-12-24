@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { FaUsers, FaVideo, FaCalendarAlt, FaChild, FaLink } from 'react-icons/fa';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import VideoCard, { type Video } from '../components/common/VideoCard';
@@ -375,12 +376,46 @@ const Channel: React.FC = () => {
               {activeTab === 'about' && (
                 <div className="about-section">
                   <h3>About {channel?.channelName}</h3>
-                  <p style={{ marginBottom: 12 }}>{channel?.channelDescription || 'No description provided.'}</p>
+                  {channel?.channelDescription ? (
+                    <p>{channel.channelDescription}</p>
+                  ) : (
+                    <div className="about-empty">
+                      <p>No description provided yet.</p>
+                    </div>
+                  )}
+                  
                   <div className="about-grid">
-                    <div className="about-item"><strong>Type:</strong> {channel?.channelType || 'public'}</div>
-                    <div className="about-item"><strong>Joined:</strong> {new Date((channel as any)?.createdAt || Date.now()).toLocaleDateString()}</div>
-                    <div className="about-item"><strong>Subscribers:</strong> {subscriberCount.toLocaleString()}</div>
-                    <div className="about-item"><strong>Videos:</strong> {videos.length}</div>
+                    <div className="about-item">
+                      <strong>
+                        <FaChild style={{ marginRight: '6px', marginBottom: '4px' }} />
+                        Channel Type
+                      </strong>
+                      <span style={{ textTransform: 'capitalize' }}>{channel?.channelType || 'public'}</span>
+                    </div>
+                    
+                    <div className="about-item">
+                      <strong>
+                        <FaCalendarAlt style={{ marginRight: '6px', marginBottom: '4px' }} />
+                        Joined
+                      </strong>
+                      <span>{new Date((channel as any)?.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                    </div>
+                    
+                    <div className="about-item">
+                      <strong>
+                        <FaUsers style={{ marginRight: '6px', marginBottom: '4px' }} />
+                        Subscribers
+                      </strong>
+                      <span>{subscriberCount.toLocaleString()}</span>
+                    </div>
+                    
+                    <div className="about-item">
+                      <strong>
+                        <FaVideo style={{ marginRight: '6px', marginBottom: '4px' }} />
+                        Total Videos
+                      </strong>
+                      <span>{videos.length}</span>
+                    </div>
                   </div>
                 </div>
               )}

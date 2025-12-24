@@ -235,6 +235,15 @@ header {
   color: #dc2626;
 }
 
+.dropdown-item.admin-item {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.dropdown-item.admin-item:hover {
+  background: #dbeafe;
+}
+
 .dropdown-divider {
   height: 1px;
   border: none;

@@ -83,13 +83,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Restore token from localStorage on mount
     const token = localStorage.getItem('authToken');
     const user = localStorage.getItem('authUser');
+    console.log('🔍 AuthContext - Restoring from localStorage:', { token: !!token, user });
     if (token && user) {
       try {
+        const parsedUser = JSON.parse(user);
+        console.log('🔍 AuthContext - Parsed user:', parsedUser);
+        console.log('🔍 AuthContext - isSuperAdmin:', parsedUser.isSuperAdmin);
         dispatch({
           type: 'RESTORE_TOKEN',
-          payload: { user: JSON.parse(user), token },
+          payload: { user: parsedUser, token },
         });
       } catch (error) {
+        console.error('🔍 AuthContext - Error parsing user:', error);
         localStorage.removeItem('authToken');
         localStorage.removeItem('authUser');
         dispatch({ type: 'SET_LOADING', payload: false });
