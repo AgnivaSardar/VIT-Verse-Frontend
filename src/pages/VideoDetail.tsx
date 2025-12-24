@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import VideoCard from '../components/common/VideoCard';
-import VideoPlayer from '../components/player/VideoPlayer';
+import VideoPlayerBar from '../components/player/VideoPlayerBar';
 import { videosApi, type VideoStats } from '../services/videosApi';
 import { tagsApi, type Tag } from '../services/tagsApi';
 import { playlistsApi, type PlaylistDetail } from '../services/playlistsApi';
@@ -342,8 +342,8 @@ const VideoDetail: React.FC = () => {
           <div className="no-results">Video not found.</div>
         ) : (
           <div className="video-detail-layout">
-            <div>
-              <VideoPlayer src={video.url} poster={video.thumbnail} title={video.title} />
+            <div className="video-detail-main">
+              <VideoPlayerBar src={video.url} poster={video.thumbnail} />
 
               <div className="video-meta">
                 <div className="video-meta-left">

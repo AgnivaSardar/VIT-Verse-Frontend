@@ -111,7 +111,7 @@ const api = {
       cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
-  upload: (endpoint: string, formData: FormData, method: 'POST' | 'PUT' = 'POST') => {
+  upload: (endpoint: string, formData: FormData, method: string = 'POST') => {
     const headers = getAuthHeadersNoContentType();
     return fetch(buildUrl(endpoint), {
       method,

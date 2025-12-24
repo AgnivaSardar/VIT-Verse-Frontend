@@ -5,6 +5,7 @@ import { FaUsers, FaVideo, FaCalendarAlt, FaChild, FaLink } from 'react-icons/fa
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import VideoCard, { type Video } from '../components/common/VideoCard';
+import EditVideoModal from '../components/videos/EditVideoModal';
 import PlaylistCard from '../components/common/PlaylistCard';
 import { channelsApi } from '../services/channelsApi';
 import { videosApi } from '../services/videosApi';
@@ -46,6 +47,8 @@ const Channel: React.FC = () => {
   const [subscriberCount, setSubscriberCount] = useState(0);
   const [activeTab, setActiveTab] = useState<TabType>('videos');
   const [isOwner, setIsOwner] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingVideo, setEditingVideo] = useState<any | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; playlistId?: number; playlistName?: string }>({
     show: false,
   });
@@ -221,6 +224,13 @@ const Channel: React.FC = () => {
     }
   };
 
+  const handleVideoSaved = (updated: any) => {
+    // Update local videos list with returned updated data
+    const id = Number(updated?.vidID ?? updated?.id);
+    setVideos((prev) => prev.map((v) => (Number(v.id) === id ? { ...v, ...updated } : v)));
+    toast.success('Video updated');
+  };
+
   return (
     <div className="app-container">
       <Header />
@@ -331,12 +341,23 @@ const Channel: React.FC = () => {
               {activeTab === 'videos' && (
                 <div className="video-grid">
                   {videos.map((video) => (
-                    <VideoCard key={video.id} video={video} />
+                    <div key={video.id}>
+                      <VideoCard video={video} />
+                    </div>
                   ))}
                   {!videos.length && (
                     <div className="no-results">No videos in this channel yet.</div>
                   )}
                 </div>
+              )}
+
+              {editingVideo && (
+                <EditVideoModal
+                  isOpen={editModalOpen}
+                  onRequestClose={() => setEditModalOpen(false)}
+                  video={editingVideo}
+                  onSaved={handleVideoSaved}
+                />
               )}
 
               {activeTab === 'playlists' && (
@@ -372,6 +393,8 @@ const Channel: React.FC = () => {
                   )}
                 </div>
               )}
+
+              
 
               {activeTab === 'about' && (
                 <div className="about-section">
@@ -517,6 +540,12 @@ const Channel: React.FC = () => {
                                 <div className="video-title">{v.title}</div>
                                 <div className="video-meta">{(v.views || 0).toLocaleString()} views · {v.uploadedAt}</div>
                               </div>
+                              <button
+                                className="modal-btn confirm"
+                                onClick={() => navigate(`/video/${vidId}/edit`)}
+                              >
+                                Edit
+                              </button>
                               <button
                                 className="modal-btn confirm"
                                 onClick={() => openDeleteVideoModal(vidId, v.title)}

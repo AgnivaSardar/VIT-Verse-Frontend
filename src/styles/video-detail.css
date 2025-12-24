@@ -10,9 +10,34 @@ aside.collapsed ~ main.video-detail-page {
 
 .video-detail-layout {
   display: grid;
-  grid-template-columns: minmax(0, 960px) 360px;
-  gap: 24px;
+  grid-template-columns: minmax(0, 960px) 360px; /* Sidebar reduced from 420px to 360px */
+  gap: 12px;
   justify-content: center;
+}
+
+/* Responsive: adjust sidebar width on larger screens */
+@media (min-width: 1400px) {
+  .video-detail-layout {
+    grid-template-columns: minmax(0, 960px) 400px; /* Reduced from 480px to 400px */
+    gap: 12px;
+  }
+}
+
+/* Responsive: collapse to single column when space is limited */
+@media (max-width: 1200px) {
+  .video-detail-layout {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .video-detail-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 960px) 360px; /* Reduced from 420px to 360px */
+    gap: 12px;
+    justify-content: center;
+  }
 }
 
 .video-player-shell {
@@ -41,13 +66,6 @@ aside.collapsed ~ main.video-detail-page {
   aspect-ratio: 16 / 9;
 }
 
-/* Responsive: collapse to single column when space is limited */
-@media (max-width: 1200px) {
-  .video-detail-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
 .video-player-title {
   padding: 12px 16px;
   font-size: 16px;
@@ -73,7 +91,7 @@ aside.collapsed ~ main.video-detail-page {
 
 .video-meta-right {
   flex-shrink: 0;
-  width: 280px;
+  width: 280px; /* Reduced from 320px to match smaller sidebar */
 }
 
 .video-meta-right .channel-card {
@@ -368,32 +386,31 @@ aside.collapsed ~ main.video-detail-page {
 }
 
 .sidebar-card {
-  
   padding: 18px;
-
 }
+
 .sidebar-videos {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* space between video card links */
+  gap: 15px;
 }
-/* Ensure links behave as block elements for consistent spacing */
+
 .sidebar-videos .video-card-link {
   display: block;
 }
-/* Compact horizontal card style for sidebar */
+
 .sidebar-videos .video-card {
   display: grid;
-  grid-template-columns: 160px 1fr;
+  grid-template-columns: 160px 1fr; /* Thumbnail reduced from 180px to 160px */
   gap: 14px;
-  padding: 16px;
+  padding: 10px;
   border-radius: 12px;
   border: 1px solid #1c1f27;
   background: #0f131a;
 }
 
 .sidebar-videos .thumbnail {
-  height: 90px;
+  height: 90px; /* Height reduced from 100px to 90px */
   border-radius: 10px;
   background-size: cover;
   background-position: center;
@@ -415,7 +432,10 @@ aside.collapsed ~ main.video-detail-page {
   padding: 0;
   display: flex;
   flex-direction: column;
+  justify-content: center;
+  align-items: flex-start; /* Changed from center to flex-start for better text alignment */
   gap: 6px;
+  font-size: larger;
 }
 
 .sidebar-videos .details h3 {
@@ -435,8 +455,9 @@ aside.collapsed ~ main.video-detail-page {
 }
 
 .sidebar-videos .chan-img-btn {
-  display: none; /* hide avatar in tight sidebar layout */
+  display: none;
 }
+
 .related-section {
   margin-top: 10px;
 }
@@ -496,20 +517,4 @@ aside.collapsed ~ main.video-detail-page {
 .no-results {
   padding: 16px;
   color: #9aa5c3;
-}
-
-@media (max-width: 1024px) {
-  .video-detail-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 960px) 360px;
-    gap: 24px;
-    justify-content: center;
-  }
-}
-
-/* Responsive: collapse to single column when space is limited */
-@media (max-width: 1200px) {
-  .video-detail-layout {
-    grid-template-columns: 1fr;
-  }
 }

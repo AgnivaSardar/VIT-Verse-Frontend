@@ -14,6 +14,7 @@ export interface Video {
   badge?: string;
   url?: string;
   createdAt?: string;
+  tags?: Array<{ id: number; name: string }> | string[] | string;
 }
 
 export interface VideoStats {

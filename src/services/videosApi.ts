@@ -21,6 +21,13 @@ export const videosApi = {
     api.get<Video[]>(`videos/search/title?q=${encodeURIComponent(query)}&limit=${limit}`),
 
   delete: (id: number) => api.delete(`videos/${id}`),
+  update: (id: number, data: any) => {
+    // If caller passes FormData (for thumbnail update), use upload route with PATCH
+    if (typeof FormData !== 'undefined' && data instanceof FormData) {
+      return api.upload(`videos/${id}`, data, 'PATCH');
+    }
+    return api.patch(`videos/${id}`, data);
+  },
   
   // Stats
   getStats: (id: number) => api.get<VideoStats>(`videostats/${id}`),
