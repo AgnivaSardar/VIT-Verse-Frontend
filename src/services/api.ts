@@ -37,7 +37,7 @@ const handleResponse = async (response: Response) => {
   if (!response.ok) {
     if (response.status === 401) {
       localStorage.removeItem('authToken');
-      window.location.href = '/login';
+      // Do not redirect, just clear token
     }
     throw new Error(`HTTP Error: ${response.status}`);
   }

@@ -1,3 +1,57 @@
+/* Settings button and panel */
+.video-player-bar__settings-btn-container {
+  position: relative;
+  display: inline-block;
+}
+
+.video-player-bar__settings-panel {
+  position: absolute;
+  right: 0;
+  bottom: 120%;
+  min-width: 180px;
+  background: rgba(24, 24, 27, 0.98);
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+  padding: 1rem 1.2rem;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  color: #fff;
+}
+
+.video-player-bar__settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.video-player-bar__settings-label {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: #a5b4fc;
+}
+
+.video-player-bar__settings-option {
+  background: #6366f1;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.4rem 1.1rem;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 0.5rem;
+  margin-bottom: 0.2rem;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.video-player-bar__settings-option.active,
+.video-player-bar__settings-option:hover {
+  background: #4338ca;
+  transform: scale(1.06);
+}
 .video-player-bar {
   display: flex;
   flex-direction: column;

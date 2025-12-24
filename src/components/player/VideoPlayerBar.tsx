@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { FaPlay, FaPause, FaVolumeUp, FaForward, FaBackward } from 'react-icons/fa';
+import { FaPlay, FaPause, FaVolumeUp, FaForward, FaBackward, FaExpand, FaCog } from 'react-icons/fa';
 import './VideoPlayerBar.css';
 
 interface VideoPlayerBarProps {
@@ -8,6 +8,32 @@ interface VideoPlayerBarProps {
 }
 
 const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
+        // Settings panel state
+        const [settingsPanelVisible, setSettingsPanelVisible] = useState(false);
+        const [playbackRate, setPlaybackRate] = useState(1);
+        const [resolution, setResolution] = useState('default');
+        // Change video speed
+        const handleSpeedChange = (rate: number) => {
+          setPlaybackRate(rate);
+          if (videoRef.current) videoRef.current.playbackRate = rate;
+        };
+
+        // Change video resolution (placeholder, for future multiple sources)
+        const handleResolutionChange = (res: string) => {
+          setResolution(res);
+          // If you have multiple sources, switch src here
+        };
+      // Fullscreen logic
+      const containerRef = useRef<HTMLDivElement>(null);
+      const handleFullscreen = () => {
+        const container = containerRef.current;
+        if (!container) return;
+        if (document.fullscreenElement) {
+          document.exitFullscreen();
+        } else {
+          container.requestFullscreen();
+        }
+      };
     useEffect(() => {
       const video = videoRef.current;
       if (video) {
@@ -138,7 +164,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   }, []);
 
   return (
-    <div className="video-player-bar">
+    <div className="video-player-bar" ref={containerRef}>
       <div
         className="video-player-bar__container"
         onMouseMove={handleMouseMoveInContainer}
@@ -251,6 +277,51 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
             >
               <FaForward />
             </button>
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                handleFullscreen();
+              }}
+              className="video-player-bar__icon-btn"
+              title="Fullscreen"
+            >
+              <FaExpand />
+            </button>
+            <div className="video-player-bar__settings-btn-container" style={{ position: 'relative', display: 'inline-block' }}>
+              <button
+                className="video-player-bar__icon-btn"
+                onClick={e => { e.stopPropagation(); setSettingsPanelVisible(v => !v); }}
+                title="Settings"
+              >
+                <FaCog />
+              </button>
+              {settingsPanelVisible && (
+                <div className="video-player-bar__settings-panel">
+                  <div className="video-player-bar__settings-section">
+                    <span className="video-player-bar__settings-label">Speed</span>
+                    {[0.5, 1, 1.5, 2].map(rate => (
+                      <button
+                        key={rate}
+                        className={`video-player-bar__settings-option${playbackRate === rate ? ' active' : ''}`}
+                        onClick={() => handleSpeedChange(rate)}
+                      >
+                        {rate}x
+                      </button>
+                    ))}
+                  </div>
+                  <div className="video-player-bar__settings-section">
+                    <span className="video-player-bar__settings-label">Resolution</span>
+                    <button
+                      className={`video-player-bar__settings-option${resolution === 'default' ? ' active' : ''}`}
+                      onClick={() => handleResolutionChange('default')}
+                    >
+                      Default
+                    </button>
+                    {/* Add more resolution options if available */}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

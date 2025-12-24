@@ -24,9 +24,10 @@ export default function AdminDashboard() {
   // Check if user is super admin
   useEffect(() => {
     if (!isAuthenticated || user?.isSuperAdmin !== true) {
-      navigate('/login');
+      // Show error message, do not redirect
+      setError('You must be a super admin to access this page.');
     }
-  }, [isAuthenticated, user, navigate]);
+  }, [isAuthenticated, user]);
 
   // Fetch dashboard stats
   useEffect(() => {

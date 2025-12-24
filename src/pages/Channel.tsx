@@ -149,7 +149,10 @@ const Channel: React.FC = () => {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      if (!user || !channelId) return;
+      if (!user || !channelId) {
+        setSubscribed(false);
+        return;
+      }
       try {
         const res = await (await import('../services/subscriptionsApi')).subscriptionsApi.mine();
         const list = unwrap<any[]>(res) || [];
@@ -277,12 +280,21 @@ const Channel: React.FC = () => {
 
                   <div className="channel-actions">
                     {!isOwner && (
-                      <button
-                        className={`subscribe-btn ${subscribed ? 'subscribed' : ''}`}
-                        onClick={handleSubscribe}
-                      >
-                        {subscribed ? '✓ Subscribed' : 'Subscribe'}
-                      </button>
+                      user ? (
+                        <button
+                          className={`subscribe-btn ${subscribed ? 'subscribed' : ''}`}
+                          onClick={handleSubscribe}
+                        >
+                          {subscribed ? '✓ Subscribed' : 'Subscribe'}
+                        </button>
+                      ) : (
+                        <button
+                          className="subscribe-btn"
+                          onClick={handleSubscribe}
+                        >
+                          Subscribe
+                        </button>
+                      )
                     )}
                     <span className="channel-badge">{channel.channelType || 'public'}</span>
                     {isOwner && (

@@ -16,9 +16,9 @@ const CreateChannel: React.FC = () => {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast.error('Please log in to create a channel');
-      navigate('/login', { replace: true });
+      // Do not redirect, just block form rendering below
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading]);
   const [formData, setFormData] = useState({
     channelName: '',
     channelDescription: '',

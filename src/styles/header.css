@@ -1,3 +1,47 @@
+/* ===== User Action Button (Login/Hi, User) ===== */
+.user-action-btn-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 8px;
+}
+
+.user-action-btn {
+  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%);
+  color: #fff;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 22px;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  outline: none;
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-action-btn:hover:not(:disabled) {
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.12);
+  transform: translateY(-2px) scale(1.04);
+}
+
+.user-action-btn.user-greet {
+  background: linear-gradient(90deg, #f59e42 0%, #fbbf24 100%);
+  color: #1e293b;
+  cursor: default;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(251, 191, 36, 0.08);
+}
+
+.user-action-btn.user-greet:hover {
+  background: linear-gradient(90deg, #fbbf24 0%, #f59e42 100%);
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.12);
+  transform: none;
+}
 /* ===== Header layout ===== */
 
 header {

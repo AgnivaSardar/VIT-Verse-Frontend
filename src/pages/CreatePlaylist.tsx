@@ -29,13 +29,13 @@ const CreatePlaylist: React.FC = () => {
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       toast.error('Please log in to create a playlist');
-      navigate('/login', { replace: true });
+      // Do not redirect, just block form rendering below
       return;
     }
     if (isAuthenticated) {
       loadVideos();
     }
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isLoading]);
 
   const loadVideos = async () => {
     try {

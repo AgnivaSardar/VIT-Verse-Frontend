@@ -171,6 +171,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('authToken');
     localStorage.removeItem('authUser');
     dispatch({ type: 'LOGOUT' });
+    window.location.reload();
   };
 
   const value: AuthContextType = {

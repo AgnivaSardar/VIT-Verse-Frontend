@@ -40,11 +40,11 @@ const Upload: React.FC = () => {
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
 
   useEffect(() => {
-    if (!token) {
-      // Replace history so back goes to the previous non-upload page
-      navigate('/login', { replace: true, state: { from: '/upload', fallback: '/' } });
-      return;
-    }
+      if (!token) {
+        toast.error('Please log in to upload videos');
+        // Do not redirect, just block form rendering below
+        return;
+      }
     checkUserChannel();
     loadPopularTags();
     loadPlaylists();

@@ -167,6 +167,19 @@ const Header: React.FC = () => {
           )}
         </div>
 
+        {/* New button next to user icon */}
+        <div className="user-action-btn-wrapper">
+          {!user ? (
+            <button className="user-action-btn" onClick={() => navigate('/login')}>
+              Log In
+            </button>
+          ) : (
+            <button className="user-action-btn user-greet" disabled>
+              Hi, {user.name}
+            </button>
+          )}
+        </div>
+
         <div className="icon-with-menu" ref={userMenuRef}>
           <img
             src={
