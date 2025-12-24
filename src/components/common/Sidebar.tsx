@@ -6,6 +6,7 @@ import { channelsApi } from '../../services/channelsApi';
 import { subscriptionsApi } from '../../services/subscriptionsApi';
 import type { Channel } from '../../types';
 import '../../styles/sidebar.css';
+import { useAuth } from '../../hooks/useAuth';
 
 interface NavLink {
   path: string;
@@ -25,6 +26,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
+    const { isAuthenticated } = useAuth();
   const location = useLocation();
   const [topTags, setTopTags] = useState<Tag[]>([]);
   const [topChannels, setTopChannels] = useState<Channel[]>([]);
@@ -32,10 +34,9 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
   useEffect(() => {
     const fetchSidebarData = async () => {
       try {
-        const [tagsRes, channelsRes, subsRes] = await Promise.allSettled([
+        const [tagsRes, channelsRes] = await Promise.allSettled([
           tagsApi.getPopular(),
           channelsApi.getAll(),
-          subscriptionsApi.mine(),
         ]);
 
         if (tagsRes.status === 'fulfilled') {
@@ -43,29 +44,30 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           setTopTags(Array.isArray(data) ? data.slice(0, 5) : []);
         }
 
-        if (subsRes.status === 'fulfilled') {
-          const data = (subsRes.value as any)?.data ?? subsRes.value;
+        if (isAuthenticated) {
+          // Only fetch subscriptions if authenticated
+          const subsRes = await subscriptionsApi.mine();
+          const data = (subsRes as any)?.data ?? subsRes;
           if (Array.isArray(data)) {
             const normalized = data.map((c: any) => ({
               ...c,
               id: c.id ?? c.channelID,
             }));
             setTopChannels(normalized.slice(0, 5));
+            return;
           }
         }
 
-        // fallback: top popular channels if no subs
-        if (subsRes.status !== 'fulfilled' || !Array.isArray((subsRes.value as any)?.data ?? subsRes.value)) {
-          if (channelsRes.status === 'fulfilled') {
-            const data = (channelsRes.value as any)?.data ?? channelsRes.value;
-            if (Array.isArray(data)) {
-              const sorted = [...data]
-                .map((c) => ({ ...c, id: (c as any).id ?? (c as any).channelID }))
-                .sort((a, b) => (b.channelSubscribers || 0) - (a.channelSubscribers || 0));
-              setTopChannels(sorted.slice(0, 5));
-            } else {
-              setTopChannels([]);
-            }
+        // fallback: top popular channels if no subs or not authenticated
+        if (channelsRes.status === 'fulfilled') {
+          const data = (channelsRes.value as any)?.data ?? channelsRes.value;
+          if (Array.isArray(data)) {
+            const sorted = [...data]
+              .map((c) => ({ ...c, id: (c as any).id ?? (c as any).channelID }))
+              .sort((a, b) => (b.channelSubscribers || 0) - (a.channelSubscribers || 0));
+            setTopChannels(sorted.slice(0, 5));
+          } else {
+            setTopChannels([]);
           }
         }
       } catch (error) {
@@ -74,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
     };
 
     fetchSidebarData();
-  }, []);
+  }, [isAuthenticated]);
 
   const isActive = (path: string) => {
     // Handle Home and hash-based section links
@@ -106,23 +108,30 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           <hr style={{ margin: '8px 0', border: 0, borderTop: '1px solid #eee' }} />
 
           <p className="section-title">Subscribed Channels</p>
-          {topChannels.length ? (
-            topChannels
-              .filter((channel) => channel.id !== undefined && channel.id !== null)
-              .map((channel) => (
-              <Link
-                key={channel.id || channel.channelName}
-                to={`/channel/${channel.id}`}
-                className={`nav-link ${isActive(`/channel/${channel.id}`) ? 'active' : ''}`}
-              >
+          {isAuthenticated ? (
+            topChannels.length ? (
+              topChannels
+                .filter((channel) => channel.id !== undefined && channel.id !== null)
+                .map((channel) => (
+                  <Link
+                    key={channel.id || channel.channelName}
+                    to={`/channel/${channel.id}`}
+                    className={`nav-link ${isActive(`/channel/${channel.id}`) ? 'active' : ''}`}
+                  >
+                    <FaLayerGroup />
+                    <span>{channel.channelName}</span>
+                  </Link>
+                ))
+            ) : (
+              <div className="nav-link muted">
                 <FaLayerGroup />
-                <span>{channel.channelName}</span>
-              </Link>
-              ))
+                <span style={{ paddingLeft: 6 }}>No channels subscribed</span>
+              </div>
+            )
           ) : (
             <div className="nav-link muted">
               <FaLayerGroup />
-              <span style={{ paddingLeft: 6 }}>No channels subscribed</span>
+              <span style={{ paddingLeft: 6 }}>Sign in to see your subscriptions</span>
             </div>
           )}
 

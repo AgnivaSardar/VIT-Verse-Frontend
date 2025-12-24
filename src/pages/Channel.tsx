@@ -150,7 +150,7 @@ const Channel: React.FC = () => {
     let mounted = true;
     (async () => {
       if (!user || !channelId) {
-        setSubscribed(false);
+        if (mounted) setSubscribed(false);
         return;
       }
       try {
@@ -282,10 +282,10 @@ const Channel: React.FC = () => {
                     {!isOwner && (
                       user ? (
                         <button
-                          className={`subscribe-btn ${subscribed ? 'subscribed' : ''}`}
+                          className={`subscribe-btn${subscribed ? ' subscribed' : ''}`}
                           onClick={handleSubscribe}
                         >
-                          {subscribed ? '✓ Subscribed' : 'Subscribe'}
+                          {subscribed && user ? '✓ Subscribed' : 'Subscribe'}
                         </button>
                       ) : (
                         <button
