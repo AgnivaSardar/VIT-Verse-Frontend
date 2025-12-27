@@ -1,5 +1,18 @@
-import api from './api';
+
+import api, { uploadWithProgress } from './api';
 import type { Video } from '../types/video';
+
+// Poll backend for processing progress
+export const pollProcessingProgress = async (uploadId: string): Promise<{ percent: number; status: string;[key: string]: any }> => {
+  const token = localStorage.getItem('authToken');
+  const headers: Record<string, string> = { 'x-bypass-rate-limit': '1' };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+  const url = `${API_BASE}/videos/progress/${uploadId}`;
+  const res = await fetch(url, { headers, credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch progress');
+  return await res.json();
+};
 
 export interface VideoStats {
   id?: number;
@@ -12,6 +25,8 @@ export const videosApi = {
   getAll: () => api.get<Video[]>('videos'),
   getById: (id: number) => api.get<Video>(`videos/${id}`),
   upload: (formData: FormData) => api.upload('videos/upload', formData),
+  uploadWithProgress: (formData: FormData, onProgress: (percent: number) => void) =>
+    uploadWithProgress('videos/upload', formData, onProgress),
   // Related queries
   getByChannel: (channelId: number, limit: number = 10) =>
     api.get<Video[]>(`videos?channelID=${channelId}&limit=${limit}&status=public`),
@@ -28,13 +43,13 @@ export const videosApi = {
     }
     return api.patch(`videos/${id}`, data);
   },
-  
+
   // Stats
   getStats: (id: number) => api.get<VideoStats>(`videostats/${id}`),
   incrementViews: (id: number) => api.post(`videostats/${id}/increment-views`, {}),
   incrementLikes: (id: number) => api.post(`videostats/${id}/increment-likes`, {}),
   decrementLikes: (id: number) => api.post(`videostats/${id}/decrement-likes`, {}),
-  
+
   // Comments
   getComments: (videoId: number) =>
     api.get(`comments/video/${videoId}`).catch((err: any) => {
@@ -50,7 +65,7 @@ export const videosApi = {
   updateComment: (id: number, data: { description: string }) =>
     api.put(`comments/${id}`, data),
   deleteComment: (id: number) => api.delete(`comments/${id}`),
-  
+
   // Likes
   getLikesCount: (videoId: number) => api.get(`likes/count/${videoId}`),
   hasLiked: (userId: number, videoId: number) =>
@@ -60,3 +75,4 @@ export const videosApi = {
   unlike: (userId: number, videoId: number) =>
     api.deleteWithBody('likes', { userID: userId, vidID: videoId }),
 };
+

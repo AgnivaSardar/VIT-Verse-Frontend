@@ -60,8 +60,12 @@ const VideoEdit: React.FC = () => {
           setFormData({
             title: data.title || '',
             description: data.description || '',
-            tags: Array.isArray(data.tags) ? data.tags : [],
-            playlistID: data.playlistID || undefined,
+            tags: Array.isArray(data.tags)
+              ? (typeof data.tags[0] === 'object'
+                  ? (data.tags as { id: number; name: string }[]).map(tagObj => tagObj.name)
+                  : (data.tags as string[]))
+              : [],
+            playlistID: (data.playlistID ?? undefined) as number | undefined,
           });
         }
       } catch (error) {

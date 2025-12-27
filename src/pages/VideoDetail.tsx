@@ -343,7 +343,7 @@ const VideoDetail: React.FC = () => {
         ) : (
           <div className="video-detail-layout">
             <div className="video-detail-main">
-              <VideoPlayerBar src={video.url} poster={video.thumbnail} />
+              <VideoPlayerBar src={video.url ?? ''} poster={video.thumbnail} />
 
               <div className="video-meta">
                 <div className="video-meta-left">

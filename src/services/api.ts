@@ -1,3 +1,36 @@
+// Upload with progress support using XMLHttpRequest
+export function uploadWithProgress(endpoint: string, formData: FormData, onProgress: (percent: number) => void, method: string = 'POST') {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+    xhr.open(method, buildUrl(endpoint));
+    const token = localStorage.getItem('authToken');
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+    }
+    xhr.setRequestHeader('x-bypass-rate-limit', '1');
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        onProgress(percent);
+      }
+    };
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const json = JSON.parse(xhr.responseText);
+          resolve(json);
+        } catch (e) {
+          resolve({ data: null });
+        }
+      } else {
+        reject(new Error(`HTTP Error: ${xhr.status}`));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Upload failed'));
+    xhr.send(formData);
+  });
+}
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export interface ApiResponse<T> {
@@ -69,6 +102,7 @@ const api = {
   get: <T>(endpoint: string) =>
     fetch(buildUrl(endpoint), {
       headers: getAuthHeaders(),
+      credentials: 'include',
       cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
@@ -76,6 +110,7 @@ const api = {
     fetch(buildUrl(endpoint), {
       method: 'POST',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify(body),
       cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
@@ -84,6 +119,7 @@ const api = {
     fetch(buildUrl(endpoint), {
       method: 'PUT',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify(body),
       cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
@@ -92,6 +128,7 @@ const api = {
     fetch(buildUrl(endpoint), {
       method: 'DELETE',
       headers: getAuthHeaders(),
+      credentials: 'include',
       cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
 
@@ -99,6 +136,7 @@ const api = {
     fetch(buildUrl(endpoint), {
       method: 'DELETE',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: JSON.stringify(body),
       cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
@@ -107,6 +145,7 @@ const api = {
     fetch(buildUrl(endpoint), {
       method: 'PATCH',
       headers: getAuthHeaders(),
+      credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
       cache: 'no-store',
     }).then(handleResponse) as Promise<ApiResponse<T>>,
@@ -116,6 +155,7 @@ const api = {
     return fetch(buildUrl(endpoint), {
       method,
       headers,
+      credentials: 'include',
       body: formData,
       cache: 'no-store',
     }).then(handleResponse);

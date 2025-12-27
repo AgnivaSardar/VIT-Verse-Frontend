@@ -110,6 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await fetch(`${AUTH_BASE}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ identifier, password }),
       });
 
@@ -153,6 +154,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await fetch(`${AUTH_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(data),
       });
 
@@ -168,10 +170,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('authUser');
-    dispatch({ type: 'LOGOUT' });
-    window.location.reload();
+    // Call backend to clear cookie
+    fetch(`${AUTH_BASE}/auth/logout`, {
+      method: 'POST',
+      credentials: 'include'
+    }).catch(err => console.error('Logout failed:', err))
+      .finally(() => {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+        dispatch({ type: 'LOGOUT' });
+        window.location.reload();
+      });
   };
 
   const value: AuthContextType = {

@@ -4,13 +4,14 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
-import { videosApi } from '../services/videosApi';
+import { videosApi, pollProcessingProgress } from '../services/videosApi';
 import { tagsApi, type Tag } from '../services/tagsApi';
 import { channelsApi } from '../services/channelsApi';
 import { playlistsApi, type Playlist } from '../services/playlistsApi';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/layout.css';
 import '../styles/upload.css';
+import FlappyBird from '../components/ui/FlappyBird';
 
 interface VideoFormData {
   title: string;
@@ -31,6 +32,10 @@ const Upload: React.FC = () => {
   });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [processing, setProcessing] = useState(false);
+  const [processingProgress, setProcessingProgress] = useState<number | null>(null);
+  const [processingStatus, setProcessingStatus] = useState<string | null>(null);
+  const [processingError, setProcessingError] = useState<string | null>(null);
   const [popularTags, setPopularTags] = useState<Tag[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Tag[]>([]);
@@ -38,6 +43,7 @@ const Upload: React.FC = () => {
   const [newTagName, setNewTagName] = useState('');
   const [hasChannel, setHasChannel] = useState<boolean | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [showFlappy, setShowFlappy] = useState(true);
 
   useEffect(() => {
       if (!token) {
@@ -171,6 +177,37 @@ const Upload: React.FC = () => {
     }
   };
 
+  const pollBackendProgress = async (uploadId: string) => {
+    setProcessing(true);
+    setProcessingProgress(0);
+    setProcessingStatus('processing');
+    setProcessingError(null);
+    let done = false;
+    while (!done) {
+      try {
+        const res = await pollProcessingProgress(uploadId);
+        setProcessingProgress(res.percent);
+        setProcessingStatus(res.status);
+        if (res.status === 'completed') {
+          done = true;
+          setProcessing(false);
+          toast.success('Video processing complete!');
+        } else if (res.status === 'failed') {
+          done = true;
+          setProcessing(false);
+          setProcessingError(res.error || 'Processing failed');
+          toast.error('Video processing failed.');
+        } else {
+          await new Promise((r) => setTimeout(r, 1500));
+        }
+      } catch (err: any) {
+        setProcessingError('Could not fetch processing progress.');
+        setProcessing(false);
+        done = true;
+      }
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -203,19 +240,33 @@ const Upload: React.FC = () => {
         uploadFormData.append('thumbnail', formData.thumbnail);
       }
 
-      setUploadProgress(25);
-      await videosApi.upload(uploadFormData);
+      setUploadProgress(0);
+      const uploadRes = await videosApi.uploadWithProgress(uploadFormData, (percent: number) => {
+        setUploadProgress(percent);
+        if (percent === 100) {
+          setProcessing(true);
+        }
+      });
       setUploadProgress(100);
-      
+      setProcessing(true);
+      // Use returned video ID as uploadId for polling
+      const uploadId = uploadRes?.video?.vidID?.toString();
+      if (uploadId) {
+        await pollBackendProgress(uploadId);
+      } else {
+        setProcessing(false);
+      }
       toast.success('Video uploaded successfully!');
       setFormData({ title: '', description: '', tags: [] });
       setUploadProgress(0);
     } catch (error: any) {
+      setProcessing(false);
       const errorMsg = error?.response?.data?.message || 'Upload failed. Please try again.';
       toast.error(errorMsg);
       console.error(error);
     } finally {
       setUploading(false);
+      setProcessing(false);
     }
   };
 
@@ -480,12 +531,25 @@ const Upload: React.FC = () => {
               )}
             </div>
 
+
+            {(uploading || processing) && showFlappy && (
+              <FlappyBird onClose={() => setShowFlappy(false)} />
+            )}
+
             {uploading && (
               <div className="progress-section">
                 <div className="progress-bar">
                   <div className="progress-fill" style={{ width: `${uploadProgress}%` }} />
                 </div>
-                <p className="progress-text">{uploadProgress}% uploaded</p>
+                <p className="progress-text">
+                  {uploadProgress < 100 && `${uploadProgress}% uploaded`}
+                  {uploadProgress === 100 && processing &&
+                    (processingProgress !== null && processingStatus !== 'completed' ?
+                      `Processing... ${processingProgress}%` :
+                      'Processing...')}
+                  {uploadProgress === 100 && !processing && 'Upload Complete!'}
+                  {processingError && <span className="error-text">{processingError}</span>}
+                </p>
               </div>
             )}
 
