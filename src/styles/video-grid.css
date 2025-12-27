@@ -1,7 +1,14 @@
 .video-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 22px;
+}
+
+@media (max-width: 1400px) {
+  .video-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
 }
 
 @media (max-width: 1200px) {
@@ -13,14 +20,15 @@
 
 @media (max-width: 768px) {
   .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    /* Single column mostly */
     gap: 12px;
   }
 }
 
 @media (max-width: 480px) {
   .video-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(100%, 1fr));
     gap: 10px;
   }
 }

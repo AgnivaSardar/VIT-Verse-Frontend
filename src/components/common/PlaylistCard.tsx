@@ -26,10 +26,20 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
     (playlist as any).channelID ||
     (playlist.user as any)?.userID ||
     (firstVideo as any)?.channelId;
-  
+
   const getThumbnailUrl = () => {
-    if (firstVideo?.video?.thumbnail) {
-      return firstVideo.video.thumbnail;
+    // 1. Check if backend computed thumbnail is available
+    if ((playlist as any).thumbnail) {
+      return (playlist as any).thumbnail;
+    }
+    // 2. Check first video images (relation structure)
+    const vid = firstVideo?.video as any;
+    if (vid?.images?.[0]?.imgURL) {
+      return vid.images[0].imgURL;
+    }
+    // 3. Legacy/Frontend-mapped check
+    if (vid?.thumbnail) {
+      return vid.thumbnail;
     }
     // Greyscale palette fallback
     const colors = ['#0f172a', '#111827', '#1f2937', '#2d3748', '#374151'];
