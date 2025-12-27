@@ -3,7 +3,11 @@
   --header-height: 72px;
   --sidebar-width: 190px;
   --sidebar-width-mobile: 60px;
-  --current-sidebar-width: var(--sidebar-width);
+  --current-sidebar-width: 190px;
+}
+
+body.sidebar-collapsed {
+  --current-sidebar-width: 60px;
 }
 
 /* --- Header --- */
@@ -144,8 +148,8 @@ aside.collapsed .nav-link i {
 main {
   position: fixed;
   top: var(--header-height);
-  left: var(--sidebar-width);
-  width: calc(100% - var(--sidebar-width));
+  left: var(--current-sidebar-width);
+  width: calc(100% - var(--current-sidebar-width));
   height: calc(100vh - var(--header-height));
   padding: 2rem 2rem 2rem 2rem;
   background: var(--bg-color);
@@ -158,8 +162,8 @@ main {
 .home-main {
   position: fixed;
   top: var(--header-height);
-  left: var(--sidebar-width);
-  width: calc(100% - var(--sidebar-width));
+  left: var(--current-sidebar-width);
+  width: calc(100% - var(--current-sidebar-width));
   height: calc(100vh - var(--header-height));
   padding: 2rem 2rem 2rem 2rem;
   background: var(--bg-color);
@@ -181,6 +185,12 @@ body.sidebar-hidden aside {
 body.sidebar-hidden main {
   left: 0;
   width: 100%;
+}
+
+/* Explicit overrides for collapsed state */
+.home-main.expanded {
+  left: 60px !important;
+  width: calc(100% - 60px) !important;
 }
 
 /* --- Floating Upload Button --- */

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useUI } from '../contexts/UIContext';
 import toast from 'react-hot-toast';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
@@ -52,7 +53,10 @@ function unwrap<T>(resp: any): T {
   return resp as T;
 }
 
+
+
 const Home: React.FC = () => {
+  const { isSidebarOpen } = useUI();
   const [activeTag, setActiveTag] = useState('All');
   const [tags, setTags] = useState<string[]>(['All']);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -111,7 +115,7 @@ const Home: React.FC = () => {
       <Header />
       <Sidebar />
 
-      <main className="home-main">
+      <main className={`home-main ${!isSidebarOpen ? 'expanded' : ''}`}>
         <CategoryTags tags={tags} activeTag={activeTag} onTagChange={setActiveTag} />
 
 

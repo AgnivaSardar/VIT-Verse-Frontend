@@ -1,8 +1,14 @@
 import { useEffect, useState } from 'react';
+import { useUI } from '../contexts/UIContext';
+import Header from '../components/common/Header';
+import Sidebar from '../components/common/Sidebar';
+import ChannelCard from '../components/common/ChannelCard';
 import { subscriptionsApi } from '../services/subscriptionsApi';
 import type { Channel } from '../types';
+import '../styles/layout.css';
 
 export default function Subscriptions() {
+  const { isSidebarOpen } = useUI();
   const [channels, setChannels] = useState<Channel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,28 +34,34 @@ export default function Subscriptions() {
     return () => { mounted = false; };
   }, []);
 
-  if (loading) return <div style={{ padding: 16 }}>Loading subscriptions…</div>;
-  if (error) return <div style={{ padding: 16, color: 'crimson' }}>{error}</div>;
-
   return (
-    <div style={{ padding: 16 }}>
-      <h2 style={{ marginBottom: 12 }}>Your Subscriptions</h2>
-      {channels.length === 0 ? (
-        <div>You are not subscribed to any channels.</div>
-      ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {channels.map((ch) => (
-            <li key={ch.id} style={{ padding: '8px 0', borderBottom: '1px solid #eee' }}>
-              <a href={`/channel/${ch.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div style={{ fontWeight: 600 }}>{ch.channelName}</div>
-                {ch.channelDescription && (
-                  <div style={{ fontSize: 12, color: '#666' }}>{ch.channelDescription}</div>
-                )}
-              </a>
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="app-container">
+      <Header />
+      <Sidebar />
+
+      <main className={`home-main ${!isSidebarOpen ? 'expanded' : ''}`}>
+        <div style={{ padding: '0 24px' }}>
+          <h2 style={{ marginBottom: 20, fontSize: '24px' }}>Your Subscriptions</h2>
+
+          {loading ? (
+            <div className="loading">Loading subscriptions...</div>
+          ) : error ? (
+            <div style={{ color: 'crimson' }}>{error}</div>
+          ) : channels.length === 0 ? (
+            <div className="no-results">You are not subscribed to any channels.</div>
+          ) : (
+            <div className="channel-grid" style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: '20px'
+            }}>
+              {channels.map((ch) => (
+                <ChannelCard key={ch.id} channel={ch} />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

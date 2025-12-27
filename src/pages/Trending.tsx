@@ -1,8 +1,49 @@
 import { useEffect, useState } from 'react';
+import { useUI } from '../contexts/UIContext';
+import Header from '../components/common/Header';
+import Sidebar from '../components/common/Sidebar';
+import VideoCard, { type Video } from '../components/common/VideoCard';
 import { videosApi } from '../services/videosApi';
-import type { Video } from '../types/video';
+import type { Video as ApiVideo } from '../types/video';
+import '../styles/layout.css';
+import '../styles/video-grid.css';
+
+const mapVideo = (video: any, index: number): Video => {
+  const channelObj = video.channel || video.Channel || video.channelInfo;
+  const channelId = video.channelId ?? video.channelID ?? channelObj?.channelID ?? channelObj?.id;
+  const channelName =
+    video.channelName ||
+    channelObj?.channelName ||
+    channelObj?.name ||
+    channelObj?.user?.userName ||
+    'Unknown channel';
+  const channelImage = video.channelImage || channelObj?.channelImage || channelObj?.image;
+
+  // Prefer backend primary key `vidID` and normalize to number
+  const rawId = video.vidID ?? video.videoID ?? video.id;
+  const parsedId =
+    typeof rawId === 'string' ? parseInt(rawId, 10) : Number(rawId);
+
+  const thumb = video.thumbnail || video.images?.[0]?.imgURL;
+
+  return {
+    // Avoid 0 by falling back to index + 1 only when missing
+    id: Number.isFinite(parsedId) && !Number.isNaN(parsedId) ? parsedId : index + 1,
+    title: video.title ?? 'Untitled video',
+    description: video.description,
+    thumbnail: thumb,
+    duration: video.duration ?? 0,
+    channelName,
+    channelImage,
+    views: video.views ?? 0,
+    uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
+    badge: video.badge,
+    channelId,
+  };
+};
 
 export default function Trending() {
+  const { isSidebarOpen } = useUI();
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,10 +54,14 @@ export default function Trending() {
       try {
         const res = await videosApi.getAll();
         const data = (res as any)?.data ?? res;
-        const items: Video[] = Array.isArray(data) ? data : [];
+        const items: ApiVideo[] = Array.isArray(data) ? data : [];
         // Sort by views descending; fallback to 0
         const sorted = [...items].sort((a, b) => (b.views || 0) - (a.views || 0));
-        if (mounted) setVideos(sorted);
+
+        if (mounted) {
+          const normalized = sorted.map((v, idx) => mapVideo(v, idx));
+          setVideos(normalized);
+        }
       } catch (e: any) {
         if (mounted) setError(e?.message || 'Failed to load trending');
       } finally {
@@ -26,31 +71,30 @@ export default function Trending() {
     return () => { mounted = false; };
   }, []);
 
-  if (loading) return <div style={{ padding: 16 }}>Loading trending…</div>;
-  if (error) return <div style={{ padding: 16, color: 'crimson' }}>{error}</div>;
-
   return (
-    <div style={{ padding: 16 }}>
-      <h2 style={{ marginBottom: 12 }}>Trending</h2>
-      {videos.length === 0 ? (
-        <div>No videos found.</div>
-      ) : (
-        <div className="grid" style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))' }}>
-          {videos.map(v => (
-            <a key={v.vidID || v.id} href={`/video/${v.vidID || v.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div style={{ border: '1px solid #eee', borderRadius: 8, overflow: 'hidden' }}>
-                {v.thumbnail && (
-                  <img src={v.thumbnail} alt={v.title} style={{ width: '100%', aspectRatio: '16/9', objectFit: 'cover' }} />
-                )}
-                <div style={{ padding: 8 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{v.title}</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>{(v.views || 0).toLocaleString()} views</div>
-                </div>
-              </div>
-            </a>
-          ))}
+    <div className="app-container">
+      <Header />
+      <Sidebar />
+
+      <main className={`home-main ${!isSidebarOpen ? 'expanded' : ''}`}>
+        <div style={{ padding: '0 24px' }}>
+          <h2 style={{ marginBottom: 20, fontSize: '24px' }}>Trending</h2>
+
+          {loading ? (
+            <div className="loading">Loading trending videos...</div>
+          ) : error ? (
+            <div style={{ color: 'crimson' }}>{error}</div>
+          ) : videos.length === 0 ? (
+            <div className="no-results">No trending videos found.</div>
+          ) : (
+            <div className="video-grid">
+              {videos.map((video) => (
+                <VideoCard key={video.id} video={video} />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </main>
     </div>
   );
 }

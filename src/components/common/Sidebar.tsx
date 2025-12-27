@@ -7,6 +7,7 @@ import { subscriptionsApi } from '../../services/subscriptionsApi';
 import type { Channel } from '../../types';
 import '../../styles/sidebar.css';
 import { useAuth } from '../../hooks/useAuth';
+import { useUI } from '../../contexts/UIContext';
 
 interface NavLink {
   path: string;
@@ -14,19 +15,23 @@ interface NavLink {
   icon: React.ReactNode;
 }
 
-// Link trending and subscriptions to Home sections (not separate pages)
+// Link trending and subscriptions to their respective pages
 const mainNav: NavLink[] = [
   { path: '/', label: 'Home', icon: <FaHome /> },
-  { path: '/#trending', label: 'Trending', icon: <FaBolt /> },
-  { path: '/#subscriptions', label: 'Subscriptions', icon: <FaLayerGroup /> },
+  { path: '/trending', label: 'Trending', icon: <FaBolt /> },
+  { path: '/subscriptions', label: 'Subscriptions', icon: <FaLayerGroup /> },
 ];
 
 interface SidebarProps {
   collapsed?: boolean;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
-    const { isAuthenticated } = useAuth();
+const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
+  const { isAuthenticated } = useAuth();
+  const { isSidebarOpen } = useUI();
+
+  // Use props if provided, otherwise fallback to context
+  const collapsed = propsCollapsed !== undefined ? propsCollapsed : !isSidebarOpen;
   const location = useLocation();
   const [topTags, setTopTags] = useState<Tag[]>([]);
   const [topChannels, setTopChannels] = useState<Channel[]>([]);
@@ -155,7 +160,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed = false }) => {
           )}
 
           <hr style={{ margin: '16px 0', border: 0, borderTop: '1px solid #eee' }} />
-          
+
           <div className="sidebar-footer">
             <div className="footer-links">
               <Link to="/about" className="footer-link">About</Link>

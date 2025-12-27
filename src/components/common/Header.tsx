@@ -1,8 +1,3 @@
-  // Add missing toggleSidebar function
-  const toggleSidebar = () => {
-    setSidebarOpen((prev) => !prev);
-    document.body.classList.toggle('sidebar-hidden', !sidebarOpen);
-  };
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -21,6 +16,7 @@ import {
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useUI } from '../../contexts/UIContext';
 import SearchBar from './SearchBar';
 import { notificationsApi, type Notification } from '../../services/notificationsApi';
 import { channelsApi } from '../../services/channelsApi';
@@ -28,7 +24,7 @@ import type { Channel } from '../../types';
 import '../../styles/header.css';
 
 const Header: React.FC = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { toggleSidebar } = useUI();
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifLoading, setNotifLoading] = useState(false);
@@ -40,6 +36,26 @@ const Header: React.FC = () => {
   const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
 
+
+  useEffect(() => {
+    if (user) {
+      channelsApi.getMyChannel()
+        .then((response) => {
+          // Verify we have a channel object
+          const channel = (response as any).data || response;
+          if (channel && (channel.id || channel.channelID)) {
+            setUserChannel(channel);
+          }
+        })
+        .catch((err) => {
+          // It's okay if they don't have a channel, just ignore
+          console.log('No channel found for user or error fetching:', err);
+          setUserChannel(null);
+        });
+    } else {
+      setUserChannel(null);
+    }
+  }, [user]);
 
   const fetchNotifications = async () => {
     try {
@@ -271,7 +287,5 @@ const Header: React.FC = () => {
 };
 
 export default Header;
-function setSidebarOpen(arg0: (prev: any) => boolean) {
-  throw new Error('Function not implemented.');
-}
+
 
