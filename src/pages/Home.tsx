@@ -17,7 +17,7 @@ import '../styles/video-grid.css';
 import '../styles/search.css';
 
 // Helper to normalize video data
-const mapVideo = (video: any, index: number): Video => {
+const mapVideo = (video: any, index: number = 0): Video => {
   const channelObj = video.channel || video.Channel || video.channelInfo;
   const channelId = video.channelId ?? video.channelID ?? channelObj?.channelID ?? channelObj?.id;
   const channelName =
@@ -26,7 +26,7 @@ const mapVideo = (video: any, index: number): Video => {
     channelObj?.name ||
     channelObj?.user?.userName ||
     'Unknown channel';
-  const channelImage = video.channelImage || channelObj?.channelImage || channelObj?.image;
+  const channelImage = video.channelImage || channelObj?.channelImage || channelObj?.image || channelObj?.user?.userImage;
   const rawId = video.vidID ?? video.videoID ?? video.id;
   const parsedId = typeof rawId === 'string' ? parseInt(rawId, 10) : Number(rawId);
   const thumb = video.thumbnail || video.images?.[0]?.imgURL;

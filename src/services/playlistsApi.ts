@@ -28,6 +28,11 @@ export interface PlaylistDetail extends Playlist {
   user?: {
     userName: string;
     userEmail: string;
+    channels?: Array<{
+      channelID: number;
+      channelName: string;
+      channelImage?: string;
+    }>;
   };
   videos?: PlaylistVideo[];
 }

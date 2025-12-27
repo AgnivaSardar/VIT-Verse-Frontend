@@ -16,7 +16,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel }) => {
   const navigate = useNavigate();
   const id = channel.channelID ?? channel.id ?? 0;
   const avatar = channel.channelImage || channel.channelThumbnail || channel.image;
-  const fallback = (channel.channelName || 'C').slice(0, 2).toUpperCase();
+  const avatarSrc = avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(channel.channelName || 'C')}&background=1f2937&color=e5e7eb`;
   const subs = channel.channelSubscribers ?? channel.subscribers;
 
   return (
@@ -26,12 +26,11 @@ const ChannelCard: React.FC<ChannelCardProps> = ({ channel }) => {
       onClick={() => navigate(`/channel/${id}`)}
       aria-label={`Open channel ${channel.channelName}`}
     >
-      <div
+      <img
+        src={avatarSrc}
         className="channel-avatar"
-        style={avatar ? { backgroundImage: `url(${avatar})` } : undefined}
-      >
-        {!avatar && fallback}
-      </div>
+        alt={channel.channelName}
+      />
       <div className="channel-title" title={channel.channelName}>
         {channel.channelName}
       </div>

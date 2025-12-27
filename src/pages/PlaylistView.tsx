@@ -28,7 +28,7 @@ const PlaylistView: React.FC = () => {
         const response = await playlistsApi.getById(playlistId);
         const data = response.data || response;
         setPlaylist(data);
-        
+
         // Check if current user is the owner
         if (user && data.user?.userEmail === user.email) {
           setIsOwner(true);
@@ -53,9 +53,9 @@ const PlaylistView: React.FC = () => {
       setPlaylist((prev) =>
         prev
           ? {
-              ...prev,
-              videos: prev.videos?.filter((v) => v.pvID !== playlistVideoId),
-            }
+            ...prev,
+            videos: prev.videos?.filter((v) => v.pvID !== playlistVideoId),
+          }
           : null
       );
       toast.success('Video removed');
@@ -100,11 +100,12 @@ const PlaylistView: React.FC = () => {
 
   const mapToVideoCard = (item: any, index: number): Video => {
     const video = item.video || {};
-    const videoCreator = video.channel?.user?.userName || 'Unknown channel';
-    
+    const channelObj = video.channel || {};
+    const channelName = channelObj.channelName || 'Unknown channel';
+
     // Get primary image from video's images array
-    const thumbnailUrl = video.images && video.images.length > 0 
-      ? video.images[0].imgURL 
+    const thumbnailUrl = video.images && video.images.length > 0
+      ? video.images[0].imgURL
       : undefined;
 
     return {
@@ -113,16 +114,18 @@ const PlaylistView: React.FC = () => {
       description: video.description || '',
       thumbnail: thumbnailUrl,
       duration: Number(video.duration) || 0,
-      // Use the original video creator's channel name, not the playlist creator
-      channelName: videoCreator,
-      // Generate avatar for the original video creator
-      channelImage: `https://ui-avatars.com/api/?name=${videoCreator}&background=1f2937&color=e5e7eb`,
-      views: Number(video.views) || 0,
+      channelName: channelName,
+      channelImage: channelObj.channelImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(channelName)}&background=1f2937&color=e5e7eb`,
+      views: Number(video.stats?.viewsCount) || 0,
       uploadedAt: video.createdAt || video.uploadedAt || new Date().toISOString(),
       badge: video.badge,
-      channelId: Number(video.channel?.channelID || video.channelId || video.channel?.id) || undefined,
+      channelId: Number(channelObj.channelID || video.channelId || channelObj.id) || undefined,
     };
   };
+
+  const channelInfo = playlist.user?.channels?.[0];
+  const displayChannelName = channelInfo?.channelName || playlist.user?.userName || 'Unknown';
+  const displayChannelAvatar = channelInfo?.channelImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayChannelName)}&background=1f2937&color=e5e7eb`;
 
   return (
     <div className="app-container">
@@ -135,6 +138,12 @@ const PlaylistView: React.FC = () => {
             <div className="cover-icon">
               {playlist.isPremium ? '⭐' : '📋'}
             </div>
+            {playlist.videos?.[0] && (
+              <img
+                src={mapToVideoCard(playlist.videos[0], 0).thumbnail}
+                className="cover-bg" alt="Cover"
+              />
+            )}
           </div>
 
           <div className="playlist-info">
@@ -150,9 +159,9 @@ const PlaylistView: React.FC = () => {
             <p className="playlist-description">{playlist.description}</p>
 
             <div className="playlist-meta">
-              <div className="meta-item">
-                <span className="meta-label">Created by</span>
-                <span className="meta-value">{playlist.user?.userName || 'Unknown'}</span>
+              <div className="meta-channel" onClick={() => channelInfo?.channelID && navigate(`/channel/${channelInfo.channelID}`)} style={{ cursor: 'pointer' }}>
+                <img src={displayChannelAvatar} className="channel-mini-avatar" alt={displayChannelName} />
+                <span className="meta-value">{displayChannelName}</span>
               </div>
               <div className="meta-item">
                 <span className="meta-label">Videos</span>

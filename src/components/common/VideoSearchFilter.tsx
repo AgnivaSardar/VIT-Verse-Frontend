@@ -141,6 +141,7 @@ const VideoSearchFilter: React.FC<VideoSearchFilterProps> = ({
         {/* Search Type Buttons */}
         <div className="search-type-buttons">
           <button
+            type="button"
             className={`search-type-btn ${searchType === 'name' ? 'active' : ''}`}
             onClick={() => handleSearchTypeChange('name')}
             disabled={disabled}
@@ -149,6 +150,7 @@ const VideoSearchFilter: React.FC<VideoSearchFilterProps> = ({
             📹 Name
           </button>
           <button
+            type="button"
             className={`search-type-btn ${searchType === 'creator' ? 'active' : ''}`}
             onClick={() => handleSearchTypeChange('creator')}
             disabled={disabled}
@@ -157,6 +159,7 @@ const VideoSearchFilter: React.FC<VideoSearchFilterProps> = ({
             👤 Creator
           </button>
           <button
+            type="button"
             className={`search-type-btn ${searchType === 'tag' ? 'active' : ''}`}
             onClick={() => handleSearchTypeChange('tag')}
             disabled={disabled}
@@ -178,7 +181,7 @@ const VideoSearchFilter: React.FC<VideoSearchFilterProps> = ({
             className="search-input-field"
             disabled={disabled}
           />
-          
+
           {/* Dropdown Suggestions */}
           {showSuggestions && suggestions.length > 0 && (
             <div className="suggestions-dropdown" ref={suggestionsRef}>
@@ -202,6 +205,7 @@ const VideoSearchFilter: React.FC<VideoSearchFilterProps> = ({
           {/* Clear Button */}
           {searchTerm && (
             <button
+              type="button"
               className="clear-search-btn"
               onClick={() => {
                 setSearchTerm('');

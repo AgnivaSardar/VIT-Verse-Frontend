@@ -21,9 +21,11 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
   const playlistId = getPlaylistId(playlist);
   const firstVideo = playlist.videos?.[0];
   const videoCount = playlist.videos?.length || 0;
+  const channelObj = playlist.user?.channels?.[0];
   const channelId =
     (playlist as any).channelId ||
     (playlist as any).channelID ||
+    channelObj?.channelID ||
     (playlist.user as any)?.userID ||
     (firstVideo as any)?.channelId;
 
@@ -54,7 +56,7 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const displayChannelName = channelName || playlist.user?.userName || 'Playlist';
+  const displayChannelName = channelName || channelObj?.channelName || playlist.user?.userName || 'Playlist';
 
   const handleChannelClick = (e: React.MouseEvent) => {
     if (!channelId) return;
@@ -62,6 +64,12 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
     e.stopPropagation();
     navigate(`/channel/${channelId}`);
   };
+
+  const avatarSrc =
+    channelObj?.channelImage ||
+    (playlist as any).channelImage ||
+    (playlist as any).channelThumbnail ||
+    `https://ui-avatars.com/api/?name=${encodeURIComponent(displayChannelName)}&background=1f2937&color=e5e7eb`;
 
   return (
     <Link
@@ -83,7 +91,7 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
             <p>{formatCreatedDate()}</p>
           </div>
           <img
-            src={`https://ui-avatars.com/api/?name=${displayChannelName}&background=1f2937&color=e5e7eb`}
+            src={avatarSrc}
             className="chan-img"
             alt={displayChannelName}
             onClick={handleChannelClick}

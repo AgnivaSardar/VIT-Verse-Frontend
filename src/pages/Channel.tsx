@@ -249,20 +249,20 @@ const Channel: React.FC = () => {
             {/* Channel Header */}
             <div className="channel-header">
               <div className="channel-info">
-                <div
+                <img
                   className="channel-avatar"
-                  style={
-                    channel.channelImage
-                      ? { backgroundImage: `url(${channel.channelImage})` }
-                      : undefined
+                  src={
+                    channel.channelImage ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      channel.channelName || 'C'
+                    )}&background=1f2937&color=e5e7eb`
                   }
-                >
-                  {!channel.channelImage && (channel.channelName?.charAt(0).toUpperCase() || 'C')}
-                </div>
+                  alt={channel.channelName}
+                />
                 <div className="channel-details">
                   <h1>{channel.channelName}</h1>
                   <p>{channel.channelDescription || 'No description available'}</p>
-                  
+
                   <div className="channel-stats">
                     <div className="stat-item">
                       <span className="stat-value">{videos.length}</span>
@@ -406,7 +406,7 @@ const Channel: React.FC = () => {
                 </div>
               )}
 
-              
+
 
               {activeTab === 'about' && (
                 <div className="about-section">
@@ -418,7 +418,7 @@ const Channel: React.FC = () => {
                       <p>No description provided yet.</p>
                     </div>
                   )}
-                  
+
                   <div className="about-grid">
                     <div className="about-item">
                       <strong>
@@ -427,7 +427,7 @@ const Channel: React.FC = () => {
                       </strong>
                       <span style={{ textTransform: 'capitalize' }}>{channel?.channelType || 'public'}</span>
                     </div>
-                    
+
                     <div className="about-item">
                       <strong>
                         <FaCalendarAlt style={{ marginRight: '6px', marginBottom: '4px' }} />
@@ -435,7 +435,7 @@ const Channel: React.FC = () => {
                       </strong>
                       <span>{new Date((channel as any)?.createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                     </div>
-                    
+
                     <div className="about-item">
                       <strong>
                         <FaUsers style={{ marginRight: '6px', marginBottom: '4px' }} />
@@ -443,7 +443,7 @@ const Channel: React.FC = () => {
                       </strong>
                       <span>{subscriberCount.toLocaleString()}</span>
                     </div>
-                    
+
                     <div className="about-item">
                       <strong>
                         <FaVideo style={{ marginRight: '6px', marginBottom: '4px' }} />

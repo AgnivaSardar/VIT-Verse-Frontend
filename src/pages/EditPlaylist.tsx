@@ -94,7 +94,8 @@ const EditPlaylist: React.FC = () => {
     }));
   };
 
-  const toggleVideoSelection = (videoId: number) => {
+  const toggleVideoSelection = (id: any) => {
+    const videoId = Number(id);
     const newSelected = new Set(selectedVideos);
     if (newSelected.has(videoId)) {
       newSelected.delete(videoId);
@@ -163,7 +164,7 @@ const EditPlaylist: React.FC = () => {
       }
 
       toast.success('Playlist updated successfully!');
-      
+
       // Add a small delay to ensure data is persisted before redirecting
       setTimeout(() => {
         navigate(`/playlists/${playlistId}`);
@@ -298,7 +299,7 @@ const EditPlaylist: React.FC = () => {
                 Manage Videos ({selectedVideos.size} selected)
               </h2>
 
-              <VideoSearchFilter 
+              <VideoSearchFilter
                 videos={videos}
                 onFilterChange={setFilteredVideos}
                 disabled={loading}
@@ -307,22 +308,41 @@ const EditPlaylist: React.FC = () => {
               <div className="videos-selection">
                 {filteredVideos.length > 0 ? (
                   <div className="videos-list-compact">
-                    {filteredVideos.map((video) => {
-                      const videoId = video.vidID || video.id || 0;
+                    {[...filteredVideos].sort((a, b) => {
+                      const aId = Number(a.vidID || a.id || 0);
+                      const bId = Number(b.vidID || b.id || 0);
+                      const aSelected = selectedVideos.has(aId);
+                      const bSelected = selectedVideos.has(bId);
+                      if (aSelected && !bSelected) return -1;
+                      if (!aSelected && bSelected) return 1;
+                      return 0;
+                    }).map((video) => {
+                      const videoId = Number(video.vidID || video.id || 0);
                       const isSelected = selectedVideos.has(videoId);
+                      const isExisting = originalSelectedVideos.has(videoId);
                       return (
                         <label
                           key={videoId}
-                          className={`video-item ${isSelected ? 'selected' : ''}`}
+                          className={`video-item ${isSelected ? 'selected' : ''} ${isExisting ? 'existing' : ''}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            toggleVideoSelection(videoId);
+                          }}
                         >
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => toggleVideoSelection(videoId)}
+                            onChange={() => { }} // Handle via label onClick
                             disabled={loading}
                           />
                           <div className="video-item-content">
-                            <div className="video-item-title">{video.title}</div>
+                            <div className="video-item-title">
+                              {video.title}
+                              {isExisting && <span className="existing-badge">Already in playlist</span>}
+                            </div>
+                            <div className="video-item-creator">
+                              {video.channel?.user?.userName || video.channel?.channelName}
+                            </div>
                             <div className="video-item-date">
                               Posted: {formatDate(video.createdAt || video.uploadedAt)}
                             </div>

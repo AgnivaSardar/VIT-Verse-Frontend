@@ -212,7 +212,7 @@ const CreatePlaylist: React.FC = () => {
                 Add Videos ({selectedVideos.size} selected)
               </h2>
 
-              <VideoSearchFilter 
+              <VideoSearchFilter
                 videos={videos}
                 onFilterChange={setFilteredVideos}
                 disabled={loading}
@@ -221,22 +221,29 @@ const CreatePlaylist: React.FC = () => {
               <div className="videos-selection">
                 {filteredVideos.length > 0 ? (
                   <div className="videos-list-compact">
-                    {filteredVideos.map((video) => {
+                    {[...filteredVideos].map((video) => {
                       const videoId = video.vidID || video.id || 0;
                       const isSelected = selectedVideos.has(videoId);
                       return (
                         <label
                           key={videoId}
                           className={`video-item ${isSelected ? 'selected' : ''}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            toggleVideoSelection(videoId);
+                          }}
                         >
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={() => toggleVideoSelection(videoId)}
+                            onChange={() => { }} // Handle via label onClick
                             disabled={loading}
                           />
                           <div className="video-item-content">
                             <div className="video-item-title">{video.title}</div>
+                            <div className="video-item-creator">
+                              {video.channel?.user?.userName || video.channel?.channelName}
+                            </div>
                             <div className="video-item-date">
                               Posted: {formatDate(video.createdAt || video.uploadedAt)}
                             </div>
