@@ -12,7 +12,7 @@ export const tagsApi = {
   getPopular: () => api.get<Tag[]>('tags/popular'),
   search: (query: string) => api.get<Tag[]>(`tags/search?q=${encodeURIComponent(query)}`),
   create: (data: Tag) => api.post<Tag>('tags', data),
-  addToVideo: (videoId: number, tags: string[]) =>
+  addToVideo: (videoId: number | string, tags: string[]) =>
     api.post(`tags/${videoId}/tags`, { tags }),
-  getVideoTags: (videoId: number) => api.get<Tag[]>(`tags/${videoId}/tags`),
+  getVideoTags: (videoId: number | string) => api.get<Tag[]>(`tags/${videoId}/tags`),
 };

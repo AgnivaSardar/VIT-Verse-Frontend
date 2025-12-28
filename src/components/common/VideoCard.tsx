@@ -4,6 +4,7 @@ import '../../styles/video-card.css';
 
 export interface Video {
   id: number;
+  publicID?: string;
   title: string;
   description?: string;
   thumbnail?: string;
@@ -14,6 +15,7 @@ export interface Video {
   uploadedAt: string;
   badge?: string;
   channelId?: number;
+  channelPublicID?: string;
 }
 
 interface VideoCardProps {
@@ -65,13 +67,15 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, to }) => {
   };
 
   const handleChannelClick = (e: React.MouseEvent) => {
-    if (!video.channelId) return;
+    const cid = video.channelPublicID || video.channelId;
+    if (!cid) return;
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/channel/${video.channelId}`);
+    navigate(`/channel/${cid}`);
   };
 
-  const href = to || `/video/${video.id}`;
+  const videoId = video.publicID || video.id;
+  const href = to || `/video/${videoId}`;
 
   return (
     <Link to={href} className="video-card-link">

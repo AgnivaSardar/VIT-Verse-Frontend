@@ -33,6 +33,7 @@ const mapVideo = (video: any, index: number = 0): Video => {
 
   return {
     id: Number.isFinite(parsedId) && !Number.isNaN(parsedId) ? parsedId : index + 1,
+    publicID: video.publicID,
     title: video.title ?? 'Untitled video',
     description: video.description,
     thumbnail: thumb,
@@ -43,12 +44,13 @@ const mapVideo = (video: any, index: number = 0): Video => {
     uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
     badge: video.badge,
     channelId,
+    channelPublicID: video.channelPublicID ?? channelObj?.publicID,
   };
 };
 
 const mapChannel = (ch: any): Channel => ({
   ...ch,
-  id: ch.id ?? ch.channelID,
+  id: ch.publicID || ch.id || ch.channelID,
 });
 
 type FeedSectionType = 'videos' | 'channels' | 'subscribed-videos' | 'playlists';
@@ -68,7 +70,7 @@ const Home: React.FC = () => {
   // Raw Data
   const [allVideos, setAllVideos] = useState<Video[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
-  const [subscriptions, setSubscriptions] = useState<number[]>([]); // channel IDs
+  const [subscriptions, setSubscriptions] = useState<any[]>([]); // channel IDs or publicIDs
   const [allPlaylists, setAllPlaylists] = useState<Playlist[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -123,7 +125,7 @@ const Home: React.FC = () => {
         if (subsRes.status === 'fulfilled') {
           const data = (subsRes.value as any)?.data ?? subsRes.value;
           if (Array.isArray(data)) {
-            setSubscriptions(data.map((s: any) => s.channelID ?? s.id));
+            setSubscriptions(data.map((s: any) => s.publicID || s.channelID || s.id));
           }
         }
 
@@ -153,15 +155,20 @@ const Home: React.FC = () => {
   }, [activeTag, allVideos]);
 
   const subscribedVideos = useMemo(() => {
-    return filteredVideos.filter(v => v.channelId && subscriptions.includes(v.channelId));
+    return filteredVideos.filter(v =>
+      (v.channelPublicID && subscriptions.includes(v.channelPublicID)) ||
+      (v.channelId && subscriptions.includes(v.channelId))
+    );
   }, [filteredVideos, subscriptions]);
 
   // Playlist Priority Logic
   const prioritizedPlaylists = useMemo(() => {
     // 1. Playlists from subscribed channels
     const subscribed = allPlaylists.filter((p: any) => {
-      const pChannelId = p.channelId || p.channelID || p.user?.userID; // heuristic
-      return pChannelId && subscriptions.includes(pChannelId);
+      const pChannelId = p.channelId || p.channelID || p.user?.userID;
+      const pChannelPublicID = p.channelPublicID || p.channel?.publicID;
+      return (pChannelPublicID && subscriptions.includes(pChannelPublicID)) ||
+        (pChannelId && subscriptions.includes(pChannelId));
     });
 
     // 2. All other public playlists

@@ -9,8 +9,8 @@ export interface PlaylistCardProps {
   channelName?: string;
 }
 
-function getPlaylistId(playlist: PlaylistDetail): number {
-  return Number(playlist.pID || playlist.id);
+function getPlaylistId(playlist: PlaylistDetail): string | number {
+  return playlist.publicID || playlist.pID || playlist.id || 0;
 }
 
 const PlaylistCard: React.FC<PlaylistCardProps> = ({
@@ -21,12 +21,15 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
   const playlistId = getPlaylistId(playlist);
   const firstVideo = playlist.videos?.[0];
   const videoCount = playlist.videos?.length || 0;
-  const channelObj = playlist.user?.channels?.[0];
+  const channelObj = playlist.user?.channels?.[0] as { channelID: number; channelName: string; channelImage?: string; publicID?: string } | undefined;
   const channelId =
+    (playlist as any).channelPublicID ||
+    channelObj?.publicID ||
     (playlist as any).channelId ||
     (playlist as any).channelID ||
     channelObj?.channelID ||
     (playlist.user as any)?.userID ||
+    (firstVideo as any)?.channelPublicID ||
     (firstVideo as any)?.channelId;
 
   const getThumbnailUrl = () => {
@@ -45,7 +48,8 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({
     }
     // Greyscale palette fallback
     const colors = ['#0f172a', '#111827', '#1f2937', '#2d3748', '#374151'];
-    const color = colors[playlistId % colors.length];
+    const pIdNumeric = typeof playlistId === 'number' ? playlistId : (playlistId.charCodeAt(0) || 0);
+    const color = colors[pIdNumeric % colors.length];
     return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='280' height='160'%3E%3Crect fill='${color.replace('#', '%23')}' width='280' height='160'/%3E%3C/svg%3E`;
   };
 

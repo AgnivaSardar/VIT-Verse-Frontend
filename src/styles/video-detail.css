@@ -1,17 +1,33 @@
 .video-detail-page {
-  padding: 24px 24px 24px;
+  padding: 16px;
+  position: relative;
+  left: 0;
+  width: 100%;
+  height: auto;
 }
 
-/* When sidebar is collapsed, expand the content area */
-aside.collapsed~main.video-detail-page {
-  left: 60px !important;
-  width: calc(100% - 60px) !important;
+/* On desktop, apply shifts if sidebar is collapsed */
+@media (min-width: 769px) {
+  .video-detail-page {
+    position: fixed;
+    top: var(--header-height);
+    left: var(--current-sidebar-width);
+    width: calc(100% - var(--current-sidebar-width));
+    height: calc(100vh - var(--header-height));
+    padding: 24px;
+    z-index: 0;
+    overflow-y: auto;
+  }
+
+  aside.collapsed~main.video-detail-page {
+    left: 60px !important;
+    width: calc(100% - 60px) !important;
+  }
 }
 
 .video-detail-layout {
   display: grid;
   grid-template-columns: minmax(0, 960px) 360px;
-  /* Sidebar reduced from 420px to 360px */
   gap: 12px;
   justify-content: center;
 }
@@ -26,20 +42,16 @@ aside.collapsed~main.video-detail-page {
 }
 
 /* Responsive: collapse to single column when space is limited */
-@media (max-width: 1200px) {
-  .video-detail-layout {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
-}
-
 @media (max-width: 1024px) {
   .video-detail-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 960px) 360px;
-    /* Reduced from 420px to 360px */
-    gap: 12px;
-    justify-content: center;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .video-player-shell {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }
 
@@ -127,19 +139,6 @@ aside.collapsed~main.video-detail-page {
   flex-shrink: 0;
 }
 
-.video-meta-right .channel-avatar-placeholder {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #7c3aed);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  font-weight: 700;
-  color: #fff;
-  flex-shrink: 0;
-}
 
 .video-meta-right .channel-info h4 {
   margin: 0 0 4px;
@@ -195,10 +194,31 @@ aside.collapsed~main.video-detail-page {
 
 .video-meta .actions {
   display: flex;
-  gap: 12px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 16px;
   flex-wrap: wrap;
   align-items: center;
+}
+
+@media (max-width: 768px) {
+  .video-meta {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .video-meta-right {
+    width: 100%;
+    margin-top: 12px;
+  }
+
+  .video-detail-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .video-meta h1 {
+    font-size: 1.1rem;
+  }
 }
 
 .video-meta .actions .like-btn {

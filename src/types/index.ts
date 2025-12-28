@@ -1,8 +1,9 @@
 export interface Channel {
   // Backend uses `channelID` (bigint serialized to number)
   channelID?: number;
+  publicID?: string;
   // Some legacy code may still refer to `id`
-  id?: number;
+  id?: number | string;
   userID?: number;
   channelName: string;
   channelDescription: string;

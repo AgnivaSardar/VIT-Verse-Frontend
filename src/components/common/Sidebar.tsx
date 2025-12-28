@@ -28,13 +28,20 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
   const { isAuthenticated } = useAuth();
-  const { isSidebarOpen } = useUI();
+  const { isSidebarOpen, closeSidebar } = useUI();
 
   // Use props if provided, otherwise fallback to context
   const collapsed = propsCollapsed !== undefined ? propsCollapsed : !isSidebarOpen;
   const location = useLocation();
   const [topTags, setTopTags] = useState<Tag[]>([]);
   const [topChannels, setTopChannels] = useState<Channel[]>([]);
+
+  // Close sidebar on link click for mobile
+  const handleLinkClick = () => {
+    if (window.innerWidth <= 768) {
+      closeSidebar();
+    }
+  };
 
   useEffect(() => {
     const fetchSidebarData = async () => {
@@ -99,6 +106,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
         key={link.path}
         to={link.path}
         className={`nav-link ${isActive(link.path) ? 'active' : ''}`}
+        onClick={handleLinkClick}
       >
         {link.icon}
         <span>{link.label}</span>
@@ -108,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
   return (
     <aside className={collapsed ? 'collapsed' : ''}>
       {renderNavLinks(mainNav)}
-      {!collapsed && (
+      {(!collapsed || (window.innerWidth <= 768 && isSidebarOpen)) && (
         <>
           <hr style={{ margin: '8px 0', border: 0, borderTop: '1px solid #eee' }} />
 
@@ -122,6 +130,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
                     key={channel.id || channel.channelName}
                     to={`/channel/${channel.id}`}
                     className={`nav-link ${isActive(`/channel/${channel.id}`) ? 'active' : ''}`}
+                    onClick={handleLinkClick}
                   >
                     <FaLayerGroup />
                     <span>{channel.channelName}</span>
@@ -142,11 +151,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
 
           <p className="section-title">Tags</p>
           {topTags.length ? (
-            topTags.slice(0, 5).map((tag) => (
+            topTags.slice(0, 10).map((tag) => (
               <Link
                 key={tag.id || tag.name}
                 to={`/search?q=${encodeURIComponent(tag.name)}`}
                 className="nav-link"
+                onClick={handleLinkClick}
               >
                 <FaTag />
                 <span>{tag.name}</span>

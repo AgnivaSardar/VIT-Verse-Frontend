@@ -2,7 +2,8 @@ import api from './api';
 
 export interface Playlist {
   id?: number;
-  pID?: number;
+  pID?: number | string;
+  publicID?: string;
   name: string;
   description: string;
   isPublic: boolean;
@@ -15,6 +16,7 @@ export interface PlaylistVideo {
   vidID?: number;
   video?: {
     vidID: number;
+    publicID?: string;
     title: string;
     description?: string;
     thumbnail?: string;
@@ -39,14 +41,14 @@ export interface PlaylistDetail extends Playlist {
 
 export const playlistsApi = {
   getAll: () => api.get<PlaylistDetail[]>('playlists'),
-  getById: (id: number) => api.get<PlaylistDetail>(`playlists/${id}`),
+  getById: (id: number | string) => api.get<PlaylistDetail>(`playlists/${id}`),
   getMyPlaylists: () => api.get<Playlist[]>('playlists/my'),
-  create: (data: Omit<Playlist, 'id' | 'pID'>) => api.post<Playlist>('playlists', data),
-  update: (id: number, data: Partial<Playlist>) =>
+  create: (data: Omit<Playlist, 'id' | 'pID' | 'publicID'>) => api.post<Playlist>('playlists', data),
+  update: (id: number | string, data: Partial<Playlist>) =>
     api.put<Playlist>(`playlists/${id}`, data),
-  delete: (id: number) => api.delete(`playlists/${id}`),
-  addVideo: (playlistId: number, videoId: number) =>
+  delete: (id: number | string) => api.delete(`playlists/${id}`),
+  addVideo: (playlistId: number | string, videoId: number | string) =>
     api.post(`playlists/${playlistId}/videos`, { videoID: videoId }),
-  removeVideo: (playlistId: number, playlistVideoId: number) =>
+  removeVideo: (playlistId: number | string, playlistVideoId: number | string) =>
     api.delete(`playlists/${playlistId}/videos/${playlistVideoId}`),
 };

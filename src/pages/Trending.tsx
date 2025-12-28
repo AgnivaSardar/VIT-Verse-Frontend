@@ -29,6 +29,7 @@ const mapVideo = (video: any, index: number): Video => {
   return {
     // Avoid 0 by falling back to index + 1 only when missing
     id: Number.isFinite(parsedId) && !Number.isNaN(parsedId) ? parsedId : index + 1,
+    publicID: video.publicID,
     title: video.title ?? 'Untitled video',
     description: video.description,
     thumbnail: thumb,
@@ -39,6 +40,7 @@ const mapVideo = (video: any, index: number): Video => {
     uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
     badge: video.badge,
     channelId,
+    channelPublicID: video.channelPublicID ?? channelObj?.publicID,
   };
 };
 

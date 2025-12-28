@@ -42,7 +42,8 @@ const Search: React.FC = () => {
       const normalized = (videosData || []).map((video: any) => {
         const channelObj = video.channel || video.Channel || video.channelInfo;
         return {
-          id: video.id ?? 0,
+          id: Number(video.vidID ?? video.videoID ?? video.id ?? 0),
+          publicID: video.publicID,
           title: video.title ?? 'Untitled video',
           description: video.description,
           thumbnail: video.thumbnail,
@@ -58,6 +59,7 @@ const Search: React.FC = () => {
           uploadedAt: video.uploadedAt || video.createdAt || 'Just now',
           badge: video.badge,
           channelId: video.channelId ?? video.channelID ?? channelObj?.channelID ?? channelObj?.id,
+          channelPublicID: video.channelPublicID ?? channelObj?.publicID,
         } as Video;
       });
 
@@ -74,7 +76,8 @@ const Search: React.FC = () => {
         const channelsData = unwrap<any[] | undefined>(channelsResponse) || [];
         const mappedChannels: ChannelResult[] = channelsData.map((ch) => ({
           channelID: ch.channelID ?? ch.id,
-          id: ch.id ?? ch.channelID,
+          publicID: ch.publicID,
+          id: ch.publicID || ch.id || ch.channelID,
           userID: ch.userID,
           channelName: ch.channelName ?? ch.name ?? 'Channel',
           channelDescription: ch.channelDescription ?? ch.description ?? '',
@@ -103,13 +106,13 @@ const Search: React.FC = () => {
       try {
         const playlistsResponse = await playlistsApi.getAll();
         const allPlaylists = unwrap<PlaylistDetail[] | undefined>(playlistsResponse) || [];
-        
+
         const filteredPlaylists = allPlaylists.filter((playlist) =>
           `${playlist.name} ${playlist.description || ''}`
             .toLowerCase()
             .includes(lowerQuery)
         );
-        
+
         setPlaylistResults(filteredPlaylists);
       } catch (error) {
         console.error('Playlist search error:', error);

@@ -18,24 +18,34 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUI } from '../../contexts/UIContext';
 import SearchBar from './SearchBar';
-import { notificationsApi, type Notification } from '../../services/notificationsApi';
+import { type Notification } from '../../services/notificationsApi';
 import { channelsApi } from '../../services/channelsApi';
 import type { Channel } from '../../types';
 import '../../styles/header.css';
 
 const Header: React.FC = () => {
-  const { toggleSidebar } = useUI();
+  const { isSidebarOpen, toggleSidebar } = useUI();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications] = useState<Notification[]>([]);
   const [notifLoading, setNotifLoading] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userChannel, setUserChannel] = useState<Channel | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { theme, resolvedTheme, setTheme, toggleTheme } = useTheme();
+  const { theme, resolvedTheme, setTheme } = useTheme();
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
 
+  // Sync sidebar state to body class - inverted to 'sidebar-open'
+  useEffect(() => {
+    if (isSidebarOpen) {
+      document.body.classList.add('sidebar-open');
+      document.body.classList.remove('sidebar-hidden');
+    } else {
+      document.body.classList.remove('sidebar-open');
+      document.body.classList.add('sidebar-hidden');
+    }
+  }, [isSidebarOpen]);
 
   useEffect(() => {
     if (user) {
@@ -59,7 +69,7 @@ const Header: React.FC = () => {
 
   const fetchNotifications = async () => {
     try {
-      // ...fetch logic here (if any was present before the error)
+      // ...fetch logic here
     } catch (error) {
       toast.error('Could not load notifications');
       console.error(error);
@@ -151,7 +161,7 @@ const Header: React.FC = () => {
               Log In
             </button>
           ) : (
-            <button className="user-action-btn user-greet" disabled>
+            <button className="user-action-btn user-greet mobile-hidden" disabled>
               Hi, {user.name}
             </button>
           )}

@@ -19,7 +19,7 @@ interface VideoFormData {
   file?: File;
   thumbnail?: File;
   tags: string[];
-  playlistID?: number;
+  playlistID?: number | string;
 }
 
 const Upload: React.FC = () => {
@@ -46,11 +46,11 @@ const Upload: React.FC = () => {
   const [showFlappy, setShowFlappy] = useState(true);
 
   useEffect(() => {
-      if (!token) {
-        toast.error('Please log in to upload videos');
-        // Do not redirect, just block form rendering below
-        return;
-      }
+    if (!token) {
+      toast.error('Please log in to upload videos');
+      // Do not redirect, just block form rendering below
+      return;
+    }
     checkUserChannel();
     loadPopularTags();
     loadPlaylists();
@@ -227,7 +227,7 @@ const Upload: React.FC = () => {
       uploadFormData.append('video', formData.file);
       uploadFormData.append('title', formData.title);
       uploadFormData.append('description', formData.description);
-      
+
       if (formData.tags.length > 0) {
         uploadFormData.append('tags', JSON.stringify(formData.tags));
       }
@@ -249,8 +249,9 @@ const Upload: React.FC = () => {
       });
       setUploadProgress(100);
       setProcessing(true);
-      // Use returned video ID as uploadId for polling
-      const uploadId = uploadRes?.video?.vidID?.toString();
+      // Use returned publicID if available, else fallback to vidID for polling
+      const videoResp = (uploadRes as any)?.video;
+      const uploadId = videoResp?.publicID || videoResp?.vidID?.toString();
       if (uploadId) {
         await pollBackendProgress(uploadId);
       } else {
@@ -295,7 +296,7 @@ const Upload: React.FC = () => {
               <h2>Create a Channel First</h2>
               <p>You need to create a channel before you can upload videos.</p>
               <p>Each user can have only one channel where all your videos will be published.</p>
-              <button 
+              <button
                 className="create-channel-button"
                 onClick={() => navigate('/channels/create')}
               >
@@ -415,16 +416,16 @@ const Upload: React.FC = () => {
               <select
                 name="playlistID"
                 value={formData.playlistID || ''}
-                onChange={(e) => setFormData(prev => ({ 
-                  ...prev, 
-                  playlistID: e.target.value ? Number(e.target.value) : undefined 
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  playlistID: e.target.value || undefined
                 }))}
                 className="upload-input"
                 disabled={uploading}
               >
                 <option value="">No Playlist (Independent)</option>
                 {playlists.map((playlist) => (
-                  <option key={playlist.id ?? playlist.pID ?? playlist.name} value={playlist.id ?? playlist.pID}>
+                  <option key={playlist.publicID || playlist.pID || playlist.id || playlist.name} value={playlist.publicID || playlist.pID}>
                     {playlist.name}
                   </option>
                 ))}
@@ -448,7 +449,7 @@ const Upload: React.FC = () => {
                     </button>
                   </div>
                 ))}
-                
+
                 <button
                   type="button"
                   onClick={() => setShowTagInput(!showTagInput)}
@@ -472,7 +473,7 @@ const Upload: React.FC = () => {
                     className="upload-input"
                     disabled={uploading}
                   />
-                  
+
                   {searchResults.length > 0 && (
                     <div className="tag-suggestions">
                       {searchResults.map((tag) => (
@@ -536,18 +537,21 @@ const Upload: React.FC = () => {
               <FlappyBird onClose={() => setShowFlappy(false)} />
             )}
 
-            {uploading && (
+            {(uploading || processing) && (
               <div className="progress-section">
-                <div className="progress-bar">
-                  <div className="progress-fill" style={{ width: `${uploadProgress}%` }} />
+                <div className={`progress-bar ${processing && uploadProgress === 100 ? 'processing' : ''}`}>
+                  <div
+                    className={`progress-fill ${processing && uploadProgress === 100 ? 'pulsing' : ''}`}
+                    style={{ width: `${uploadProgress}%` }}
+                  />
                 </div>
                 <p className="progress-text">
                   {uploadProgress < 100 && `${uploadProgress}% uploaded`}
                   {uploadProgress === 100 && processing &&
                     (processingProgress !== null && processingStatus !== 'completed' ?
                       `Processing... ${processingProgress}%` :
-                      'Processing...')}
-                  {uploadProgress === 100 && !processing && 'Upload Complete!'}
+                      'Processing on server...')}
+                  {uploadProgress === 100 && !processing && !processingError && 'Finalizing...'}
                   {processingError && <span className="error-text">{processingError}</span>}
                 </p>
               </div>
@@ -558,7 +562,7 @@ const Upload: React.FC = () => {
               className="upload-button"
               disabled={uploading}
             >
-              {uploading ? 'Uploading...' : 'Upload Video'}
+              {uploading ? (processing ? 'Processing...' : 'Uploading...') : 'Upload Video'}
             </button>
           </form>
         </div>

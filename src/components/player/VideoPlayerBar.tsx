@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { FaPlay, FaPause, FaVolumeUp, FaForward, FaBackward, FaExpand, FaCog } from 'react-icons/fa';
 import './VideoPlayerBar.css';
 
@@ -8,38 +8,38 @@ interface VideoPlayerBarProps {
 }
 
 const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
-        // Settings panel state
-        const [settingsPanelVisible, setSettingsPanelVisible] = useState(false);
-        const [playbackRate, setPlaybackRate] = useState(1);
-        const [resolution, setResolution] = useState('default');
-        // Change video speed
-        const handleSpeedChange = (rate: number) => {
-          setPlaybackRate(rate);
-          if (videoRef.current) videoRef.current.playbackRate = rate;
-        };
+  // Settings panel state
+  const [settingsPanelVisible, setSettingsPanelVisible] = useState(false);
+  const [playbackRate, setPlaybackRate] = useState(1);
+  const [resolution, setResolution] = useState('default');
+  // Change video speed
+  const handleSpeedChange = (rate: number) => {
+    setPlaybackRate(rate);
+    if (videoRef.current) videoRef.current.playbackRate = rate;
+  };
 
-        // Change video resolution (placeholder, for future multiple sources)
-        const handleResolutionChange = (res: string) => {
-          setResolution(res);
-          // If you have multiple sources, switch src here
-        };
-      // Fullscreen logic
-      const containerRef = useRef<HTMLDivElement>(null);
-      const handleFullscreen = () => {
-        const container = containerRef.current;
-        if (!container) return;
-        if (document.fullscreenElement) {
-          document.exitFullscreen();
-        } else {
-          container.requestFullscreen();
-        }
-      };
-    useEffect(() => {
-      const video = videoRef.current;
-      if (video) {
-        video.play().then(() => setIsPlaying(true)).catch(() => {});
-      }
-    }, [src]);
+  // Change video resolution (placeholder, for future multiple sources)
+  const handleResolutionChange = (res: string) => {
+    setResolution(res);
+    // If you have multiple sources, switch src here
+  };
+  // Fullscreen logic
+  const containerRef = useRef<HTMLDivElement>(null);
+  const handleFullscreen = () => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else {
+      container.requestFullscreen();
+    }
+  };
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.play().then(() => setIsPlaying(true)).catch(() => { });
+    }
+  }, [src]);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -50,7 +50,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   const lastTapRef = useRef<number>(0);
   const idleTimeoutRef = useRef<number | undefined>(undefined);
 
-  const handlePlayPause = () => {
+  const handlePlayPause = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
     if (video.paused) {
@@ -60,42 +60,53 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
       video.pause();
       setIsPlaying(false);
     }
-  };
+  }, []);
 
   const handleVideoClick = () => {
     handlePlayPause();
   };
 
-  const handleVideoDoubleTap = (side: 'left' | 'right') => {
+  const handleVideoDoubleTap = useCallback((action: 'left' | 'right' | 'middle') => {
     const video = videoRef.current;
     if (!video) return;
-    if (side === 'left') {
+    if (action === 'left') {
       video.currentTime = Math.max(0, video.currentTime - 10);
-    } else {
-      video.currentTime = Math.min(duration, video.currentTime + 10);
+      setCurrentTime(video.currentTime);
+    } else if (action === 'right') {
+      const activeDuration = video.duration || duration;
+      video.currentTime = Math.min(activeDuration, video.currentTime + 10);
+      setCurrentTime(video.currentTime);
+    } else if (action === 'middle') {
+      handleFullscreen();
     }
-    setCurrentTime(video.currentTime);
-  };
+  }, [duration]);
 
   const handleVideoDoubleClick = (e: React.MouseEvent<HTMLVideoElement>) => {
     const clickX = e.nativeEvent.offsetX;
     const width = e.currentTarget.offsetWidth;
-    if (clickX < width / 2) {
+    const third = width * 0.3;
+    if (clickX < third) {
       handleVideoDoubleTap('left');
-    } else {
+    } else if (clickX > width - third) {
       handleVideoDoubleTap('right');
+    } else {
+      handleVideoDoubleTap('middle');
     }
   };
 
   const handleVideoTouch = (e: React.TouchEvent<HTMLVideoElement>) => {
     const now = Date.now();
-    const touchX = e.touches[0].clientX;
+    const touchX = e.nativeEvent ? (e as any).nativeEvent.offsetX : e.touches[0].clientX; // clientX is fallback
     const width = e.currentTarget.offsetWidth;
+    const third = width * 0.3;
+
     if (now - lastTapRef.current < 300) {
-      if (touchX < width / 2) {
+      if (touchX < third) {
         handleVideoDoubleTap('left');
-      } else {
+      } else if (touchX > width - third) {
         handleVideoDoubleTap('right');
+      } else {
+        handleVideoDoubleTap('middle');
       }
     }
     lastTapRef.current = now;
@@ -156,12 +167,36 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   };
 
   useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Skip shortcuts if user is typing in an input or textarea
+      const active = document.activeElement;
+      const isTyping =
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        (active as HTMLElement)?.isContentEditable;
+
+      if (isTyping) return;
+
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        handlePlayPause();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handleVideoDoubleTap('left');
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        handleVideoDoubleTap('right');
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
+      window.removeEventListener('keydown', handleKeyDown);
       if (idleTimeoutRef.current) {
         window.clearTimeout(idleTimeoutRef.current);
       }
     };
-  }, []);
+  }, [handlePlayPause, handleVideoDoubleTap]);
 
   return (
     <div className="video-player-bar" ref={containerRef}>

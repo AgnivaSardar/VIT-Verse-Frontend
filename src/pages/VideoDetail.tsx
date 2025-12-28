@@ -51,7 +51,7 @@ interface CommentItem {
 const VideoDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const videoId = Number(id);
+  const videoId = id; // Could be numeric OR public ID string
   const { user } = useAuth();
 
   const [video, setVideo] = useState<Video | null>(null);
@@ -62,8 +62,6 @@ const VideoDetail: React.FC = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [relatedByChannel, setRelatedByChannel] = useState<Video[]>([]);
-  const [relatedByTags, setRelatedByTags] = useState<Video[]>([]);
   const [sidebarVideos, setSidebarVideos] = useState<Video[]>([]);
   const [userNames, setUserNames] = useState<Record<number, string>>({});
 
@@ -86,12 +84,14 @@ const VideoDetail: React.FC = () => {
           if (rawData) {
             const mappedVideo: Video = {
               id: Number(rawData.vidID ?? rawData.id),
+              publicID: rawData.publicID,
               title: rawData.title ?? 'Untitled',
               description: rawData.description,
               thumbnail: rawData.images?.[0]?.imgURL || rawData.thumbnail,
               duration: rawData.duration ?? 0,
               channelName: rawData.channel?.channelName ?? rawData.channelName ?? 'Unknown',
               channelId: Number(rawData.channelID ?? rawData.channel?.channelID ?? rawData.channelId),
+              channelPublicID: rawData.channel?.publicID ?? rawData.channelPublicID,
               channelImage: rawData.channel?.channelImage ?? rawData.channelImage,
               channelDescription: rawData.channel?.channelDescription ?? rawData.channelDescription,
               channelSubscribers: Number(rawData.channel?.channelSubscribers ?? rawData.channelSubscribers ?? 0),
@@ -108,9 +108,13 @@ const VideoDetail: React.FC = () => {
               try {
                 const subsRes = await (await import('../services/subscriptionsApi')).subscriptionsApi.mine();
                 const subs = unwrap<any[]>(subsRes) || [];
-                const found = subs.some((c: any) => Number(c.channelID ?? c.id) === Number(mappedVideo.channelId));
+                const targetId = mappedVideo.channelPublicID || mappedVideo.channelId;
+                const found = subs.some((c: any) =>
+                  (c.publicID && c.publicID === targetId) ||
+                  Number(c.channelID ?? c.id) === Number(mappedVideo.channelId)
+                );
                 setIsSubscribed(found);
-              } catch (_) {}
+              } catch (_) { }
             }
           } else {
             console.log('❌ No video data received');
@@ -163,17 +167,22 @@ const VideoDetail: React.FC = () => {
           setTags(Array.isArray(data) ? data : []);
         }
 
-        // Fire-and-forget view increment; optimistically bump UI
+        // Fire-and-forget view increment; only bump UI if backend confirms new view
         videosApi.incrementViews(videoId)
-          .then(() => setStats((prev) => (prev ? { ...prev, views: (prev.views || 0) + 1 } : prev)))
+          .then((res: any) => {
+            const data = unwrap<any>(res);
+            if (data?.incremented) {
+              setStats((prev) => (prev ? { ...prev, views: (prev.views || 0) + 1 } : prev));
+            }
+          })
           .catch((err) => console.warn('View increment failed', err));
 
-        if (user) {
+        if (user && videoId) {
           const likedRes = await videosApi.hasLiked(user.id, videoId);
           const likedObj = unwrap<any>(likedRes);
           setIsLiked(Boolean(likedObj?.hasLiked));
         }
-        
+
       } catch (error) {
         toast.error('Failed to load video');
         console.error('Video detail error', error);
@@ -198,10 +207,10 @@ const VideoDetail: React.FC = () => {
     const channelImage = raw.channelImage || channelObj?.channelImage || channelObj?.image;
 
     const rawId = raw.vidID ?? raw.videoID ?? raw.id;
-    const parsedId = typeof rawId === 'string' ? parseInt(rawId, 10) : Number(rawId);
-
+    // For sidebar videos, we prefer publicID for links
     return {
-      id: Number.isFinite(parsedId) && !Number.isNaN(parsedId) ? parsedId : index + 1,
+      id: Number.isFinite(Number(rawId)) ? Number(rawId) : index + 1,
+      publicID: raw.publicID,
       title: raw.title ?? 'Untitled video',
       description: raw.description,
       thumbnail: raw.images?.[0]?.imgURL || raw.thumbnail,
@@ -212,6 +221,7 @@ const VideoDetail: React.FC = () => {
       uploadedAt: raw.uploadedAt || raw.createdAt || new Date().toISOString(),
       badge: raw.badge,
       channelId: Number(channelId) || undefined,
+      channelPublicID: raw.channelPublicID ?? channelObj?.publicID,
     };
   };
 
@@ -277,6 +287,7 @@ const VideoDetail: React.FC = () => {
       toast.error('Please log in to like');
       return;
     }
+    if (!videoId) return;
     try {
       if (isLiked) {
         // Unlike (remove user like) and decrement stats
@@ -306,6 +317,7 @@ const VideoDetail: React.FC = () => {
 
     setSubmitting(true);
     try {
+      if (!videoId) return;
       const res = await videosApi.addComment({
         userID: user.id,
         vidID: videoId,
@@ -352,50 +364,50 @@ const VideoDetail: React.FC = () => {
                     <span><FaEye /> {viewCount} views</span>
                     <span><FaHeart /> {likeCount} likes</span>
                   </div>
-                <div className="actions">
-                  {user && (
-                    <button 
-                      className={`like-btn ${isLiked ? 'liked' : ''}`} 
-                      onClick={handleLike}
-                      title={isLiked ? 'Unlike' : 'Like'}
-                    >
-                      <FaThumbsUp />
-                    </button>
-                  )}
-                  {user && video.channelId && (
-                    <button
-                      className={`subscribe-btn ${isSubscribed ? 'subscribed' : ''}`}
-                      onClick={async () => {
-                        if (!user || !video.channelId) {
-                          toast.error('Log in to subscribe');
-                          return;
-                        }
-                        try {
-                          if (isSubscribed) {
-                            await (await import('../services/channelsApi')).channelsApi.unsubscribe(video.channelId, user.id);
-                            setIsSubscribed(false);
-                          } else {
-                            await (await import('../services/channelsApi')).channelsApi.subscribe(video.channelId, user.id);
-                            setIsSubscribed(true);
+                  <div className="actions">
+                    {user && (
+                      <button
+                        className={`like-btn ${isLiked ? 'liked' : ''}`}
+                        onClick={handleLike}
+                        title={isLiked ? 'Unlike' : 'Like'}
+                      >
+                        <FaThumbsUp />
+                      </button>
+                    )}
+                    {user && video.channelId && (
+                      <button
+                        className={`subscribe-btn ${isSubscribed ? 'subscribed' : ''}`}
+                        onClick={async () => {
+                          if (!user || !video.channelId) {
+                            toast.error('Log in to subscribe');
+                            return;
                           }
-                        } catch (e) {
-                          toast.error('Subscription action failed');
-                          console.error(e);
-                        }
-                      }}
-                    >
-                      {isSubscribed ? 'Subscribed' : 'Subscribe'}
-                    </button>
-                  )}
-                </div>
-
-                {tags.length > 0 && (
-                  <div className="tag-list">
-                    {tags.map((tag) => (
-                      <span key={tag.id || tag.name} className="tag-chip"><FaTag /> {tag.name}</span>
-                    ))}
+                          try {
+                            if (isSubscribed) {
+                              await (await import('../services/channelsApi')).channelsApi.unsubscribe(video.channelId, user.id);
+                              setIsSubscribed(false);
+                            } else {
+                              await (await import('../services/channelsApi')).channelsApi.subscribe(video.channelId, user.id);
+                              setIsSubscribed(true);
+                            }
+                          } catch (e) {
+                            toast.error('Subscription action failed');
+                            console.error(e);
+                          }
+                        }}
+                      >
+                        {isSubscribed ? 'Subscribed' : 'Subscribe'}
+                      </button>
+                    )}
                   </div>
-                )}
+
+                  {tags.length > 0 && (
+                    <div className="tag-list">
+                      {tags.map((tag) => (
+                        <span key={tag.id || tag.name} className="tag-chip"><FaTag /> {tag.name}</span>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Collapsible description below actions */}
                   <div className="meta-section">
@@ -408,12 +420,15 @@ const VideoDetail: React.FC = () => {
 
                 <div className="video-meta-right">
                   {video.channelId && (
-                    <a href={`/channel/${video.channelId}`} className="channel-card">
-                      {video.channelImage ? (
-                        <img src={video.channelImage} alt={video.channelName} className="channel-avatar" />
-                      ) : (
-                        <div className="channel-avatar-placeholder">{video.channelName.charAt(0).toUpperCase()}</div>
-                      )}
+                    <a href={`/channel/${video.channelPublicID || video.channelId}`} className="channel-card">
+                      <img
+                        src={
+                          video.channelImage ||
+                          `https://ui-avatars.com/api/?name=${encodeURIComponent(video.channelName)}&background=1f2937&color=e5e7eb`
+                        }
+                        alt={video.channelName}
+                        className="channel-avatar"
+                      />
                       <div className="channel-info">
                         <h4>{video.channelName}</h4>
                         {typeof video.channelSubscribers === 'number' && (

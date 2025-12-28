@@ -23,19 +23,19 @@ function unwrap<T>(resp: any): T {
   return resp as T;
 }
 
-function getPlaylistId(playlist: any): number {
-  return Number(playlist.pID || playlist.id);
+function getPlaylistId(playlist: any): string | number {
+  return playlist.publicID || playlist.pID || playlist.id;
 }
 
-function getVideoId(video: any): number {
-  return Number(video.vidID ?? video.vidId ?? video.id ?? 0);
+function getVideoId(video: any): string | number {
+  return video.publicID || video.vidID || video.vidId || video.id || 0;
 }
 
 type TabType = 'videos' | 'playlists' | 'about' | 'statistics' | 'edit';
 
 const Channel: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const channelId = Number(id);
+  const channelId = id; // Could be numeric OR public ID string
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -52,10 +52,10 @@ const Channel: React.FC = () => {
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; playlistId?: number; playlistName?: string }>({
     show: false,
   });
-  const [deleteVideoModal, setDeleteVideoModal] = useState<{ show: boolean; vidId?: number; title?: string }>({
+  const [deleteVideoModal, setDeleteVideoModal] = useState<{ show: boolean; vidId?: string | number; title?: string }>({
     show: false,
   });
-  const [deletingVideoId, setDeletingVideoId] = useState<number | null>(null);
+  const [deletingVideoId, setDeletingVideoId] = useState<string | number | null>(null);
   const [stats, setStats] = useState<{ totalVideos: number; totalViews: number; totalLikes: number; totalComments: number; totalShares: number; subscribers: number; totalPlaylists: number; monthlyViews: { month: string; count: number }[] } | null>(null);
 
   useEffect(() => {
@@ -79,12 +79,14 @@ const Channel: React.FC = () => {
         const videoData = unwrap<any[] | undefined>(videosRes) || [];
         const mapped = (videoData || [])
           .filter((vid) => {
-            const chanId = vid.channelId ?? vid.channelID;
-            return Number(chanId) === channelId;
+            const vidChannelID = vid.channelID ?? vid.channelId;
+            const vidChannelPublicID = vid.channelPublicID ?? vid.channel?.publicID;
+            return (vidChannelPublicID && vidChannelPublicID === channelId) ||
+              Number(vidChannelID) === Number(channelId);
           })
           .map((vid) => ({
             id: vid.vidID ?? vid.id ?? 0,
-            vidID: vid.vidID ?? vid.id ?? 0,
+            publicID: vid.publicID,
             title: vid.title ?? 'Untitled video',
             description: vid.description,
             thumbnail: vid.thumbnail,
@@ -95,6 +97,7 @@ const Channel: React.FC = () => {
             uploadedAt: vid.uploadedAt || vid.createdAt || 'Just now',
             badge: vid.badge,
             channelId: vid.channelId ?? vid.channelID,
+            channelPublicID: vid.channelPublicID ?? vid.channel?.publicID,
           } as Video));
         setVideos(mapped);
 
@@ -107,8 +110,10 @@ const Channel: React.FC = () => {
             const filtered = allPlaylists.filter((pl: any) => {
               const ownerUserID = pl.userID ?? pl.user?.userID;
               const plChannelID = pl.channelID ?? pl.channelId;
+              const plChannelPublicID = pl.channelPublicID ?? pl.channel?.publicID;
               return (
                 (ownerUserID && Number(ownerUserID) === Number(channelData.userID)) ||
+                (plChannelPublicID && plChannelPublicID === channelId) ||
                 (plChannelID && Number(plChannelID) === Number(channelId))
               );
             });
@@ -229,8 +234,8 @@ const Channel: React.FC = () => {
 
   const handleVideoSaved = (updated: any) => {
     // Update local videos list with returned updated data
-    const id = Number(updated?.vidID ?? updated?.id);
-    setVideos((prev) => prev.map((v) => (Number(v.id) === id ? { ...v, ...updated } : v)));
+    const id = updated?.publicID ?? updated?.vidID ?? updated?.id;
+    setVideos((prev) => prev.map((v) => ((v.publicID && v.publicID === id) || Number(v.id) === Number(id) ? { ...v, ...updated } : v)));
     toast.success('Video updated');
   };
 

@@ -1,10 +1,11 @@
 /* Sidebar Navigation Styles */
 aside .nav-link svg {
-  width: 12px;
-  height: 12px;
+  width: 18px;
+  height: 18px;
   color: #9aa5c3;
   transition: color 0.2s ease;
   flex-shrink: 0;
+  opacity: 1 !important;
 }
 
 aside .nav-link:hover svg,
@@ -35,13 +36,12 @@ hr {
   border-top: 1px solid currentColor;
 }
 
+/* Sidebar Navigation Styles */
 @media (max-width: 768px) {
-  .nav-link span {
-    display: none;
-  }
 
+  /* Remove the icon-only override to allow full labels in the overlay */
   .nav-link {
-    justify-content: center;
+    justify-content: flex-start !important;
   }
 }
 

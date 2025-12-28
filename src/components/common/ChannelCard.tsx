@@ -14,7 +14,7 @@ type ChannelCardProps = {
 
 const ChannelCard: React.FC<ChannelCardProps> = ({ channel }) => {
   const navigate = useNavigate();
-  const id = channel.channelID ?? channel.id ?? 0;
+  const id = channel.publicID || channel.channelID || channel.id || 0;
   const avatar = channel.channelImage || channel.channelThumbnail || channel.image;
   const avatarSrc = avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(channel.channelName || 'C')}&background=1f2937&color=e5e7eb`;
   const subs = channel.channelSubscribers ?? channel.subscribers;

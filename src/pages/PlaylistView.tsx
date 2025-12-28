@@ -10,9 +10,20 @@ import '../styles/layout.css';
 import '../styles/video-grid.css';
 import '../styles/playlist.css';
 
+type ChannelWithPublic = {
+  channelID: number;
+  channelName: string;
+  channelImage?: string;
+  publicID?: string;
+};
+
+function getPlaylistId(playlist: PlaylistDetail): string | number {
+  return playlist.publicID || playlist.id;
+}
+
 const PlaylistView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const playlistId = Number(id);
+  const playlistId = id; // Could be numeric OR public ID string
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -45,7 +56,7 @@ const PlaylistView: React.FC = () => {
     loadPlaylist();
   }, [playlistId, user, navigate]);
 
-  const handleRemoveVideo = async (playlistVideoId: number) => {
+  const handleRemoveVideo = async (playlistVideoId: number | string) => {
     if (!window.confirm('Remove this video from playlist?')) return;
 
     try {
@@ -110,6 +121,7 @@ const PlaylistView: React.FC = () => {
 
     return {
       id: Number(video.vidID || video.id || index),
+      publicID: video.publicID,
       title: video.title || 'Untitled video',
       description: video.description || '',
       thumbnail: thumbnailUrl,
@@ -120,10 +132,11 @@ const PlaylistView: React.FC = () => {
       uploadedAt: video.createdAt || video.uploadedAt || new Date().toISOString(),
       badge: video.badge,
       channelId: Number(channelObj.channelID || video.channelId || channelObj.id) || undefined,
+      channelPublicID: channelObj.publicID || video.channelPublicID,
     };
   };
 
-  const channelInfo = playlist.user?.channels?.[0];
+  const channelInfo = playlist.user?.channels?.[0] as ChannelWithPublic | undefined;
   const displayChannelName = channelInfo?.channelName || playlist.user?.userName || 'Unknown';
   const displayChannelAvatar = channelInfo?.channelImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(displayChannelName)}&background=1f2937&color=e5e7eb`;
 
@@ -159,7 +172,10 @@ const PlaylistView: React.FC = () => {
             <p className="playlist-description">{playlist.description}</p>
 
             <div className="playlist-meta">
-              <div className="meta-channel" onClick={() => channelInfo?.channelID && navigate(`/channel/${channelInfo.channelID}`)} style={{ cursor: 'pointer' }}>
+              <div className="meta-channel" onClick={() => {
+                const cid = channelInfo?.publicID || channelInfo?.channelID;
+                if (cid) navigate(`/channel/${cid}`);
+              }} style={{ cursor: 'pointer' }}>
                 <img src={displayChannelAvatar} className="channel-mini-avatar" alt={displayChannelName} />
                 <span className="meta-value">{displayChannelName}</span>
               </div>
@@ -199,13 +215,16 @@ const PlaylistView: React.FC = () => {
               <div className="video-grid playlist-video-grid">
                 {playlist.videos.map((item, index) => {
                   const videoCard = mapToVideoCard(item, index);
-                  const to = `/video/${videoCard.id}?playlist=${playlistId}`;
+                  const vId = videoCard.publicID || videoCard.id;
+                  const to = `/video/${vId}?playlist=${playlistId}`;
                   return (
                     <div className="playlist-card-wrapper" key={item.pvID || videoCard.id}>
                       {isOwner && (
                         <button
                           className="btn-icon btn-remove remove-card"
-                          onClick={() => item.pvID && handleRemoveVideo(item.pvID)}
+                          onClick={() => {
+                            if (item.pvID) handleRemoveVideo(item.pvID);
+                          }}
                           title="Remove from playlist"
                         >
                           ✕

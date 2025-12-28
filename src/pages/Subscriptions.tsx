@@ -22,7 +22,7 @@ export default function Subscriptions() {
         const list: any[] = Array.isArray(raw) ? raw : [];
         const normalized: Channel[] = list.map((c) => ({
           ...c,
-          id: (c as any).id ?? (c as any).channelID,
+          id: c.publicID || c.channelID || c.id || 0,
         }));
         if (mounted) setChannels(normalized);
       } catch (e: any) {
