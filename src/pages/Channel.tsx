@@ -73,7 +73,7 @@ const Channel: React.FC = () => {
 
         // Check if current user owns this channel
         if (user && channelData) {
-          setIsOwner(channelData.userID === user.id);
+          setIsOwner(Number(channelData.userID) === Number(user.id));
         }
 
         const videoData = unwrap<any[] | undefined>(videosRes) || [];
@@ -101,24 +101,47 @@ const Channel: React.FC = () => {
           } as Video));
         setVideos(mapped);
 
-        // Load playlists created by this channel's owner only
+        // Load playlists: if the viewer owns the channel, load their playlists (including private); otherwise load public playlists and filter
         if (channelData) {
           try {
-            const playlistsRes = await playlistsApi.getAll();
-            const allPlaylists = unwrap<PlaylistDetail[] | undefined>(playlistsRes) || [];
+            const isOwnerLocal = Boolean(user && channelData && Number(channelData.userID) === Number(user.id));
+            console.debug('Channel playlits load: channelData, user, isOwnerLocal', { channelData, user, isOwnerLocal });
 
-            const filtered = allPlaylists.filter((pl: any) => {
-              const ownerUserID = pl.userID ?? pl.user?.userID;
-              const plChannelID = pl.channelID ?? pl.channelId;
-              const plChannelPublicID = pl.channelPublicID ?? pl.channel?.publicID;
-              return (
-                (ownerUserID && Number(ownerUserID) === Number(channelData.userID)) ||
-                (plChannelPublicID && plChannelPublicID === channelId) ||
-                (plChannelID && Number(plChannelID) === Number(channelId))
-              );
-            });
+            if (isOwnerLocal) {
+              // Authenticated request that returns owner's playlists (may include private)
+              const myPlaylistsRes = await playlistsApi.getMyPlaylists();
+              const myPlaylists = unwrap<Playlist[] | undefined>(myPlaylistsRes) || [];
+              console.debug('Channel: fetched myPlaylists', { count: myPlaylists.length, sample: myPlaylists[0] });
+              setPlaylists(myPlaylists as unknown as PlaylistDetail[]);
+            } else {
+              const playlistsRes = await playlistsApi.getAll();
+              const allPlaylists = unwrap<PlaylistDetail[] | undefined>(playlistsRes) || [];
+              console.debug('Channel: fetched public playlists', { count: allPlaylists.length, sample: allPlaylists[0] });
 
-            setPlaylists(filtered);
+              const filtered = allPlaylists.filter((pl: any) => {
+                const ownerUserID = pl.userID ?? pl.user?.userID;
+                const plChannelID = pl.channelID ?? pl.channelId;
+                const plChannelPublicID = pl.channelPublicID ?? pl.channel?.publicID;
+                // Additional fallbacks: nested user.channels or first video channel
+                const fallbackChannelPublicID = pl.user?.channels?.[0]?.publicID || (pl.videos?.[0]?.video?.channel?.publicID);
+                const fallbackChannelID = pl.user?.channels?.[0]?.channelID || (pl.videos?.[0]?.video?.channel?.channelID);
+                // Numeric channel id from current channel data
+                const numericChannelID = Number(channelData.channelID ?? channelData.id ?? 0);
+                    // Note: intentionally NOT counting playlists just because they contain a video from this channel
+                    // (previously this caused playlists created by other channels to appear here).
+                return (
+                  (ownerUserID && Number(ownerUserID) === Number(channelData.userID)) ||
+                  (plChannelPublicID && plChannelPublicID === channelId) ||
+                  (plChannelID && Number(plChannelID) === numericChannelID) ||
+                    (fallbackChannelPublicID && fallbackChannelPublicID === channelId) ||
+                    (pl.user && pl.user.userID && Number(pl.user.userID) === Number(channelData.userID)) ||
+                    (pl.user && pl.user.channels && pl.user.channels.some((c: any) => Number(c.channelID) === numericChannelID))
+                );
+              });
+
+              console.debug('Channel: filtered public playlists', { count: filtered.length, sample: filtered[0] });
+              setPlaylists(filtered);
+            }
           } catch (error) {
             console.error('Failed to load playlists:', error);
             setPlaylists([]);
@@ -161,8 +184,32 @@ const Channel: React.FC = () => {
       try {
         const res = await (await import('../services/subscriptionsApi')).subscriptionsApi.mine();
         const list = unwrap<any[]>(res) || [];
-        const found = list.some((c: any) => Number(c.id ?? c.channelID) === Number(channelId));
-        if (mounted) setSubscribed(found);
+
+        // Determine whether current route param is numeric id or publicID (CH-...)
+        const isPublic = typeof channelId === 'string' && channelId.startsWith('CH-');
+        const numericChannelId = Number(channelId);
+
+        const found = list.some((sub: any) => {
+          // subscription may include nested channel object
+          const subChannel = sub.channel || {};
+
+          if (isPublic) {
+            // match against public ids
+            return (
+              (subChannel.publicID && subChannel.publicID === channelId) ||
+              (sub.publicID && sub.publicID === channelId) ||
+              (sub.channelPublicID && sub.channelPublicID === channelId)
+            );
+          }
+
+          // numeric comparison
+          return (
+            Number(sub.channelID ?? sub.id ?? subChannel.channelID) === numericChannelId ||
+            Number(sub.user?.channels?.[0]?.channelID) === numericChannelId
+          );
+        });
+
+        if (mounted) setSubscribed(Boolean(found));
       } catch (e) {
         // silent
       }
@@ -176,12 +223,13 @@ const Channel: React.FC = () => {
       return;
     }
     try {
+      const targetChannelId = channel?.channelID ?? channelId;
       if (subscribed) {
-        await channelsApi.unsubscribe(channelId, user.id);
+        await channelsApi.unsubscribe(targetChannelId, user.id);
         setSubscribed(false);
         toast.success('Unsubscribed');
       } else {
-        await channelsApi.subscribe(channelId, user.id);
+        await channelsApi.subscribe(targetChannelId, user.id);
         setSubscribed(true);
         toast.success('Subscribed!');
       }

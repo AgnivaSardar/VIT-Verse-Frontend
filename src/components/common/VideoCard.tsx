@@ -71,7 +71,7 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, to }) => {
     if (!cid) return;
     e.preventDefault();
     e.stopPropagation();
-    navigate(`/channel/${cid}`);
+    navigate(`/channel/${(cid && typeof cid === 'object') ? (cid.publicID ?? cid.channelID ?? cid.id) : cid}`);
   };
 
   const videoId = video.publicID || video.id;

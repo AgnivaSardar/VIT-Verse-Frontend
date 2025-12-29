@@ -44,6 +44,20 @@ const Upload: React.FC = () => {
   const [hasChannel, setHasChannel] = useState<boolean | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [showFlappy, setShowFlappy] = useState(true);
+  const [manualFlappy, setManualFlappy] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Shortcut: Alt + B to toggle Flappy Bird for dev
+      if (e.altKey && e.code === 'KeyB') {
+        e.preventDefault();
+        setManualFlappy(prev => !prev);
+        setShowFlappy(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     if (!token) {
@@ -317,7 +331,23 @@ const Upload: React.FC = () => {
       <main>
         <div className="upload-container">
           <div className="upload-header">
-            <h1>Upload Video</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <h1>Upload Video</h1>
+              <button
+                type="button"
+                onClick={() => { setManualFlappy(true); setShowFlappy(true); }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'help',
+                  fontSize: '20px',
+                  opacity: 0.6
+                }}
+                title="Dev Tool: Play Flappy Bird (Alt+B)"
+              >
+                🐦
+              </button>
+            </div>
             <p>Share your lectures, events, or projects with the VIT-Verse community</p>
           </div>
 
@@ -533,8 +563,8 @@ const Upload: React.FC = () => {
             </div>
 
 
-            {(uploading || processing) && showFlappy && (
-              <FlappyBird onClose={() => setShowFlappy(false)} />
+            {(uploading || processing || manualFlappy) && showFlappy && (
+              <FlappyBird onClose={() => { setShowFlappy(false); setManualFlappy(false); }} />
             )}
 
             {(uploading || processing) && (

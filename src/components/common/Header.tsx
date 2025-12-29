@@ -117,8 +117,9 @@ const Header: React.FC = () => {
     <header>
       <div className="logo-section">
         <FaBars className="menu-icon" onClick={toggleSidebar} />
-        <Link to="/" className="brand" aria-label="Go to home">
-          <h1>
+        <Link to="/" className="brand" aria-label="Go to home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src="/vitverselogo2.png" alt="VIT-Verse Logo" className="site-logo" style={{ height: 40,marginLeft:18, marginRight: 18, verticalAlign: 'middle' }} />
+          <h1 style={{ margin: 0, fontWeight: 700, fontSize: '1.6rem', color: 'inherit', letterSpacing: 1 }}>
             VIT-<span>Verse</span>
           </h1>
         </Link>
@@ -192,7 +193,7 @@ const Header: React.FC = () => {
                   <button
                     className="dropdown-item"
                     onClick={() =>
-                      navigate(`/channel/${userChannel.channelID ?? userChannel.id}`)
+                        navigate(`/channel/${userChannel.publicID ?? userChannel.channelID ?? userChannel.id}`)
                     }
                   >
                     <FaFilm /> My Channel

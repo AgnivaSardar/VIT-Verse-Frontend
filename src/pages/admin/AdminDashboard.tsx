@@ -22,11 +22,9 @@ export default function AdminDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   // Check if user is super admin
+  // Clear error when auth changes
   useEffect(() => {
-    if (!isAuthenticated || user?.isSuperAdmin !== true) {
-      // Show error message, do not redirect
-      setError('You must be a super admin to access this page.');
-    }
+    setError(null);
   }, [isAuthenticated, user]);
 
   // Fetch dashboard stats
@@ -49,8 +47,12 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated]);
 
-  if (!isAuthenticated || user?.isSuperAdmin !== true) {
-    return null;
+  if (!isAuthenticated) {
+    return <div className="admin-error">You must be logged in to access this page.</div>;
+  }
+
+  if (user?.isSuperAdmin !== true) {
+    return <div className="admin-error">You must be a super admin to access this page.</div>;
   }
 
   if (loading) {

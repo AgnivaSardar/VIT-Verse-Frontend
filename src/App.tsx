@@ -17,7 +17,7 @@ import EditPlaylist from './pages/EditPlaylist';
 import ChannelEdit from './pages/edit/ChannelEdit';
 import ProfileEdit from './pages/edit/ProfileEdit';
 import VideoEdit from './pages/edit/VideoEdit';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import Login from './features/auth/Login';
 import Register from './features/auth/Register';
 import About from './pages/footer/About';
@@ -57,6 +57,7 @@ function App() {
                 <Route path="/playlists/:id/edit" element={<EditPlaylist />} />
                 <Route path="/playlists/:id" element={<PlaylistView />} />
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/channel/:id/edit" element={<ChannelEdit />} />
