@@ -3,15 +3,15 @@
 .admin-dashboard {
   display: flex;
   height: 100vh;
-  background-color: #0a0e27;
-  color: #e0e0e0;
+  background-color: var(--bg-color);
+  color: var(--text-main);
 }
 
 /* Sidebar */
 .admin-sidebar {
   width: 280px;
-  background: linear-gradient(135deg, #1a1f3a 0%, #16213e 100%);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   padding: 20px;
@@ -28,13 +28,13 @@
 .admin-logo h1 {
   font-size: 24px;
   margin: 0;
-  color: #fff;
+  color: var(--text-main);
   font-weight: 700;
 }
 
 .admin-logo p {
   font-size: 12px;
-  color: #999;
+  color: var(--text-secondary);
   margin: 5px 0 0 0;
 }
 
@@ -49,7 +49,7 @@
 .nav-item {
   background: none;
   border: none;
-  color: #b0b0b0;
+  color: var(--text-secondary);
   padding: 12px 15px;
   text-align: left;
   cursor: pointer;
@@ -60,20 +60,65 @@
 }
 
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+  background-color: var(--panel);
+  color: var(--text-main);
 }
 
 .nav-item.active {
-  background-color: rgba(88, 166, 255, 0.2);
-  color: #58a6ff;
-  border-left: 3px solid #58a6ff;
+  background-color: rgba(88, 166, 255, 0.08);
+  color: var(--vit-blue, #58a6ff);
+  border-left: 3px solid rgba(88,166,255,0.25);
   padding-left: 12px;
+
+/* New: compact stat card layout */
+.stat-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  background: var(--button-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+/* Improve readability of admin header/sidebar */
+.admin-logo h1 {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.nav-item {
+  font-size: 1rem; /* slightly larger */
+  font-weight: 600;
+  color: var(--text-main);
+  padding: 14px 16px;
+}
+
+.nav-item:hover {
+  background-color: var(--panel);
+  color: var(--text-main);
+}
+
+.nav-item.active {
+  background-color: rgba(88, 166, 255, 0.08);
+  color: var(--vit-blue, #58a6ff);
+  border-left: 3px solid rgba(88,166,255,0.25);
+  padding-left: 12px;
+}
 }
 
 /* Admin Footer */
 .admin-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border);
   padding-top: 20px;
   margin-top: auto;
 }
@@ -81,14 +126,14 @@
 .admin-footer p {
   font-size: 12px;
   margin: 0 0 10px 0;
-  color: #999;
+  color: var(--text-secondary);
 }
 
 .logout-btn {
   width: 100%;
   padding: 10px;
-  background-color: #d32f2f;
-  color: white;
+  background-color: var(--button-bg);
+  color: var(--text-main);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -98,7 +143,7 @@
 }
 
 .logout-btn:hover {
-  background-color: #ff5555;
+  filter: brightness(1.05);
 }
 
 /* Main Content */
@@ -118,14 +163,14 @@
 }
 
 .admin-error {
-  color: #ff5555;
+  color: var(--button-bg);
 }
 
 /* Overview Section */
 .overview-section h2 {
   font-size: 28px;
   margin: 0 0 30px 0;
-  color: #fff;
+  color: var(--text-main);
 }
 
 /* Stats Grid */
@@ -137,8 +182,8 @@
 }
 
 .stat-card {
-  background: linear-gradient(135deg, #1a1f3a 0%, #16213e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 25px;
   transition: all 0.2s;
@@ -156,17 +201,17 @@
   font-weight: 600;
 }
 
-.stat-number {
-  font-size: 32px;
-  font-weight: 700;
-  color: #58a6ff;
+.stat-header {
+  font-size: 14px;
+  color: var(--text-secondary);
   margin-bottom: 12px;
+  font-weight: 600;
 }
-
-.stat-detail {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
+.stat-number {
+  font-size: 40px;
+  font-weight: 800;
+  color: var(--vit-blue, #58a6ff);
+  margin-bottom: 8px;
 }
 
 .stat-detail .active,
@@ -181,16 +226,16 @@
 
 /* Recent Users */
 .recent-users {
-  background: linear-gradient(135deg, #1a1f3a 0%, #16213e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 25px;
 }
 
 .recent-users h3 {
   margin: 0 0 20px 0;
-  font-size: 18px;
-  color: #fff;
+  font-size: 20px;
+  color: var(--text-main);
 }
 
 .users-list {
@@ -203,14 +248,14 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  padding: 14px 16px;
+  background-color: var(--panel);
+  border-radius: 8px;
   transition: all 0.2s;
 }
 
 .user-item:hover {
-  background-color: rgba(88, 166, 255, 0.1);
+  background-color: rgba(88, 166, 255, 0.06);
 }
 
 .user-info {
@@ -220,13 +265,13 @@
 }
 
 .user-info strong {
-  color: #fff;
-  font-size: 14px;
+  color: var(--text-main);
+  font-size: 15px;
 }
 
 .user-info span {
-  color: #999;
-  font-size: 12px;
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .user-role {
@@ -253,7 +298,29 @@
 .tab-content h2 {
   font-size: 24px;
   margin: 0 0 20px 0;
-  color: #fff;
+  color: var(--text-main);
+}
+
+/* Table readability */
+.data-table thead {
+  background-color: rgba(59, 130, 246, 0.06);
+  border-bottom: 2px solid rgba(59, 130, 246, 0.12);
+}
+
+.data-table th {
+  padding: 15px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--text-main);
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: 14px 15px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
 /* Search Bar */
@@ -265,10 +332,10 @@
   width: 100%;
   max-width: 400px;
   padding: 12px 15px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: var(--input-bg);
+  border: 1px solid var(--border);
   border-radius: 6px;
-  color: #fff;
+  color: var(--text-main);
   font-size: 14px;
   transition: all 0.2s;
 }
@@ -288,29 +355,29 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
-  background: linear-gradient(135deg, #1a1f3a 0%, #16213e 100%);
+  background: var(--card-bg);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .data-table thead {
-  background-color: rgba(88, 166, 255, 0.1);
-  border-bottom: 2px solid rgba(88, 166, 255, 0.3);
+  background-color: rgba(88, 166, 255, 0.06);
+  border-bottom: 2px solid rgba(88, 166, 255, 0.12);
 }
 
 .data-table th {
   padding: 15px;
   text-align: left;
   font-weight: 600;
-  color: #58a6ff;
+  color: var(--vit-blue, #58a6ff);
   font-size: 13px;
   text-transform: uppercase;
 }
 
 .data-table td {
   padding: 12px 15px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #e0e0e0;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-main);
   font-size: 13px;
 }
 

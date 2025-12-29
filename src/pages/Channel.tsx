@@ -71,9 +71,10 @@ const Channel: React.FC = () => {
         const channelData = unwrap<ChannelType | null>(channelRes) || null;
         setChannel(channelData);
 
-        // Check if current user owns this channel
+        // Check if current user owns this channel. Backend may set `isOwner` in sanitized response.
         if (user && channelData) {
-          setIsOwner(Number(channelData.userID) === Number(user.id));
+          const ownerFlag = Boolean((channelData as any).isOwner) || Number(channelData.userID) === Number(user.id);
+          setIsOwner(ownerFlag);
         }
 
         const videoData = unwrap<any[] | undefined>(videosRes) || [];
@@ -104,7 +105,7 @@ const Channel: React.FC = () => {
         // Load playlists: if the viewer owns the channel, load their playlists (including private); otherwise load public playlists and filter
         if (channelData) {
           try {
-            const isOwnerLocal = Boolean(user && channelData && Number(channelData.userID) === Number(user.id));
+            const isOwnerLocal = Boolean(user && channelData && (Boolean((channelData as any).isOwner) || Number(channelData.userID) === Number(user.id)));
             console.debug('Channel playlits load: channelData, user, isOwnerLocal', { channelData, user, isOwnerLocal });
 
             if (isOwnerLocal) {
@@ -152,8 +153,8 @@ const Channel: React.FC = () => {
         // Use actual subscriber count from channel
         setSubscriberCount(Number(channelData?.channelSubscribers ?? 0));
 
-        // Fetch stats only for owner
-        if (user && channelData && channelData.userID === user.id) {
+        // Fetch stats only for owner (backend may provide isOwner flag)
+        if (user && channelData && (Boolean((channelData as any).isOwner) || Number(channelData.userID) === Number(user.id))) {
           try {
             const res = await (channelsApi as any).getStats?.(channelId);
             const data = unwrap<any>(res);

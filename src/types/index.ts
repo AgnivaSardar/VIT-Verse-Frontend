@@ -5,6 +5,7 @@ export interface Channel {
   // Some legacy code may still refer to `id`
   id?: number | string;
   userID?: number;
+  isOwner?: boolean;
   channelName: string;
   channelDescription: string;
   channelType: 'public' | 'private' | 'protected';

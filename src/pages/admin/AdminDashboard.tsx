@@ -28,23 +28,21 @@ export default function AdminDashboard() {
   }, [isAuthenticated, user]);
 
   // Fetch dashboard stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get<DashboardStats>('/admin/stats');
-        setStats(response.data);
-        setError(null);
-      } catch (err: any) {
-        setError(err.response?.data?.message || 'Failed to load dashboard stats');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (isAuthenticated) {
-      fetchStats();
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get<DashboardStats>('/admin/stats');
+      setStats(response.data);
+      setError(null);
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to load dashboard stats');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) fetchStats();
   }, [isAuthenticated]);
 
   if (!isAuthenticated) {
@@ -123,10 +121,17 @@ export default function AdminDashboard() {
           <div className="overview-section">
             <h2>Dashboard Overview</h2>
 
+            {/* single heading */}
+
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-header">👥 Users</div>
-                <div className="stat-number">{stats.users.total}</div>
+                    <div className="stat-top">
+                      <div className="stat-icon">👥</div>
+                      <div>
+                        <div className="stat-header">Users</div>
+                        <div className="stat-number">{stats.users.total}</div>
+                      </div>
+                    </div>
                 <div className="stat-detail">
                   <span className="active">Active: {stats.users.active}</span>
                   <span className="inactive">Inactive: {stats.users.inactive}</span>
@@ -134,8 +139,13 @@ export default function AdminDashboard() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-header">📺 Channels</div>
-                <div className="stat-number">{stats.channels.total}</div>
+                    <div className="stat-top">
+                      <div className="stat-icon">📺</div>
+                      <div>
+                        <div className="stat-header">Channels</div>
+                        <div className="stat-number">{stats.channels.total}</div>
+                      </div>
+                    </div>
                 <div className="stat-detail">
                   <span className="public">Public: {stats.channels.public}</span>
                   <span className="hidden">Hidden: {stats.channels.hidden}</span>
@@ -143,8 +153,13 @@ export default function AdminDashboard() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-header">🎬 Videos</div>
-                <div className="stat-number">{stats.videos.total}</div>
+                    <div className="stat-top">
+                      <div className="stat-icon">🎬</div>
+                      <div>
+                        <div className="stat-header">Videos</div>
+                        <div className="stat-number">{stats.videos.total}</div>
+                      </div>
+                    </div>
                 <div className="stat-detail">
                   <span className="public">Public: {stats.videos.public}</span>
                   <span className="hidden">Hidden: {stats.videos.hidden}</span>
@@ -152,29 +167,33 @@ export default function AdminDashboard() {
               </div>
 
               <div className="stat-card">
-                <div className="stat-header">📋 Playlists</div>
-                <div className="stat-number">{stats.playlists.total}</div>
+                    <div className="stat-top">
+                      <div className="stat-icon">📋</div>
+                      <div>
+                        <div className="stat-header">Playlists</div>
+                        <div className="stat-number">{stats.playlists.total}</div>
+                      </div>
+                    </div>
                 <div className="stat-detail">
                   <span className="public">Public: {stats.playlists.public}</span>
                   <span className="hidden">Hidden: {stats.playlists.hidden}</span>
                 </div>
               </div>
             </div>
-
-            <div className="recent-users">
-              <h3>Recent Users</h3>
-              <div className="users-list">
-                {stats.recentUsers.map((user, index) => (
-                  <div key={index} className="user-item">
-                    <div className="user-info">
-                      <strong>{user.name}</strong>
-                      <span>{user.email}</span>
-                    </div>
-                    <div className="user-role">{user.role}</div>
+                <div className="recent-users">
+                  <h3>Recent Users</h3>
+                  <div className="users-list">
+                    {stats.recentUsers.map((user, index) => (
+                      <div key={index} className="user-item">
+                        <div className="user-info">
+                          <strong>{user.name}</strong>
+                          <span>{user.email}</span>
+                        </div>
+                        <div className="user-role">{user.role}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
           </div>
         )}
 
@@ -226,7 +245,7 @@ function UsersTab() {
     try {
       await api.patch(`/admin/users/${userId}/toggle-status`);
       // Refresh list
-      setPage(1);
+      setPage(1); // trigger refetch via useEffect
     } catch (err) {
       alert('Failed to toggle user status');
     }

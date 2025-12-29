@@ -29,7 +29,7 @@ interface VideoEditFormData {
 
 const VideoEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const videoId = Number(id);
+  const videoIdRaw = id; // may be numeric or publicID
   const { token, isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [video, setVideo] = useState<Video | null>(null);
@@ -49,11 +49,11 @@ const VideoEdit: React.FC = () => {
       navigate('/login', { replace: true });
       return;
     }
-    if (!isAuthenticated || !videoId) return;
+    if (!isAuthenticated || !videoIdRaw) return;
     const fetchVideo = async () => {
       setLoading(true);
       try {
-        const response = await videosApi.getById(videoId);
+        const response = await videosApi.getById(videoIdRaw as string);
         const data = unwrap<Video | undefined>(response);
         setVideo(data ?? null);
         if (data) {
@@ -95,7 +95,7 @@ const VideoEdit: React.FC = () => {
     };
     loadPlaylists();
     loadPopularTags();
-  }, [videoId, isAuthenticated, isLoading, navigate]);
+  }, [videoIdRaw, isAuthenticated, isLoading, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -179,7 +179,7 @@ const VideoEdit: React.FC = () => {
       if (formData.thumbnail) {
         updateFormData.append('thumbnail', formData.thumbnail);
       }
-      await videosApi.update(videoId, updateFormData);
+      await videosApi.update(videoIdRaw as string, updateFormData);
       toast.success('Video updated successfully!');
       navigate(-1);
     } catch (error: any) {
