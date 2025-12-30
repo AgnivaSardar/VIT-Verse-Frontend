@@ -152,10 +152,8 @@ const Header: React.FC = () => {
   };
 
   const handleAvatarClick = () => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+    // Allow menu to open for both logged-in and logged-out users so they can
+    // access public actions (theme switcher, login/register entry points).
     setShowUserMenu((prev) => !prev);
     setShowNotifications(false);
   };
@@ -258,53 +256,72 @@ const Header: React.FC = () => {
           />
           {showUserMenu && (
             <div className="dropdown" style={{ overflow: 'visible' }}>
-              <button className="dropdown-item" onClick={() => navigate('/profile')}>
-                <FaUser /> Profile
-              </button>
-              <button className="dropdown-item" onClick={() => navigate('/profile/edit')}>
-                <FaEdit /> Edit Profile
-              </button>
-              <hr className="dropdown-divider" />
-              {userChannel ? (
+              {/* If user is not logged in, show quick entry points to login/register */}
+              {!user ? (
                 <>
-                  <button
-                    className="dropdown-item"
-                    onClick={() =>
-                        navigate(`/channel/${userChannel.publicID ?? userChannel.channelID ?? userChannel.id}`)
-                    }
-                  >
-                    <FaFilm /> My Channel
+                  <button className="dropdown-item" onClick={() => { navigate('/login'); setShowUserMenu(false); }}>
+                    <FaUser /> Log In
                   </button>
-                  <button
-                    className="dropdown-item"
-                    onClick={() => navigate('/playlists/create')}
-                  >
-                    <FaPlayCircle /> Create Playlist
+                  <button className="dropdown-item" onClick={() => { navigate('/register'); setShowUserMenu(false); }}>
+                    <FaEdit /> Register
+                  </button>
+                  <hr className="dropdown-divider" />
+                  <button className="dropdown-item" onClick={() => { navigate('/upload'); setShowUserMenu(false); }}>
+                    <FaVideo /> Upload Video
                   </button>
                 </>
               ) : (
-                <button
-                  className="dropdown-item"
-                  onClick={() => navigate('/channels/create')}
-                >
-                  <FaFilm /> Create Channel
-                </button>
-              )}
-              <hr className="dropdown-divider" />
-              <button className="dropdown-item" onClick={() => navigate('/upload')}>
-                <FaVideo /> Upload Video
-              </button>
-              {(user?.isSuperAdmin === true || user?.role === 'admin') && (
                 <>
-                  <hr className="dropdown-divider" />
-                  <button className="dropdown-item admin-item" onClick={() => {
-                    console.log('🔍 Navigating to admin dashboard');
-                    navigate('/admin/dashboard');
-                  }}>
-                    <FaUserShield /> Admin Dashboard
+                  <button className="dropdown-item" onClick={() => navigate('/profile')}>
+                    <FaUser /> Profile
                   </button>
+                  <button className="dropdown-item" onClick={() => navigate('/profile/edit')}>
+                    <FaEdit /> Edit Profile
+                  </button>
+                  <hr className="dropdown-divider" />
+                  {userChannel ? (
+                    <>
+                      <button
+                        className="dropdown-item"
+                        onClick={() =>
+                          navigate(`/channel/${userChannel.publicID ?? userChannel.channelID ?? userChannel.id}`)
+                        }
+                      >
+                        <FaFilm /> My Channel
+                      </button>
+                      <button
+                        className="dropdown-item"
+                        onClick={() => navigate('/playlists/create')}
+                      >
+                        <FaPlayCircle /> Create Playlist
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className="dropdown-item"
+                      onClick={() => navigate('/channels/create')}
+                    >
+                      <FaFilm /> Create Channel
+                    </button>
+                  )}
+                  <hr className="dropdown-divider" />
+                  <button className="dropdown-item" onClick={() => navigate('/upload')}>
+                    <FaVideo /> Upload Video
+                  </button>
+                  {(user?.isSuperAdmin === true || user?.role === 'admin') && (
+                    <>
+                      <hr className="dropdown-divider" />
+                      <button className="dropdown-item admin-item" onClick={() => {
+                        console.log('🔍 Navigating to admin dashboard');
+                        navigate('/admin/dashboard');
+                      }}>
+                        <FaUserShield /> Admin Dashboard
+                      </button>
+                    </>
+                  )}
                 </>
               )}
+
               <hr className="dropdown-divider" />
               <div style={{ position: 'relative' }}>
                 <button
@@ -355,17 +372,22 @@ const Header: React.FC = () => {
                   </div>
                 )}
               </div>
-              <hr className="dropdown-divider" />
-              <button
-                className="dropdown-item logout-item"
-                onClick={() => {
-                  logout();
-                  setShowUserMenu(false);
-                  navigate('/');
-                }}
-              >
-                <FaSignOutAlt /> Logout
-              </button>
+
+              {user && (
+                <>
+                  <hr className="dropdown-divider" />
+                  <button
+                    className="dropdown-item logout-item"
+                    onClick={() => {
+                      logout();
+                      setShowUserMenu(false);
+                      navigate('/');
+                    }}
+                  >
+                    <FaSignOutAlt /> Logout
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>

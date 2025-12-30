@@ -1,6 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom'; // ADD THIS
 import { FaPlay, FaPause, FaVolumeUp, FaForward, FaBackward, FaExpand, FaCog } from 'react-icons/fa';
 import './VideoPlayerBar.css';
+import { useUI } from '../../contexts/UIContext';
+
+const VIDEO_PATH_RE = /^\/video(\/|$)/i; // ADD THIS
 
 interface VideoPlayerBarProps {
   src: string;
@@ -8,22 +12,64 @@ interface VideoPlayerBarProps {
 }
 
 const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
-  // Settings panel state
+  const location = useLocation(); // ADD THIS
+  const { isSidebarOpen, toggleSidebar } = useUI();
+  const wasOpenBeforeCollapse = useRef(false);
+  const autoCollapsedRef = useRef(false);
+  const hasInitializedRef = useRef(false); // ADD THIS - prevents multiple collapses
+
+  const isVideoPage = VIDEO_PATH_RE.test(location.pathname); // ADD THIS
+
+  // Collapse sidebar when FIRST entering video page
+  useEffect(() => {
+    if (isVideoPage && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      if (isSidebarOpen && !autoCollapsedRef.current) {
+        wasOpenBeforeCollapse.current = true;
+        autoCollapsedRef.current = true;
+        toggleSidebar(); // Collapse
+      }
+    }
+  }, [location.pathname, isSidebarOpen, toggleSidebar]); // FIXED: use location.pathname
+
+  // User manually toggles during video → respect choice
+  useEffect(() => {
+    if (isVideoPage && autoCollapsedRef.current && isSidebarOpen) {
+      autoCollapsedRef.current = false;
+      wasOpenBeforeCollapse.current = false;
+    }
+  }, [isSidebarOpen, isVideoPage]);
+
+  // Restore on leaving video page
+  useEffect(() => {
+    return () => {
+      if (autoCollapsedRef.current && wasOpenBeforeCollapse.current) {
+        toggleSidebar(); // Restore
+      }
+    };
+  }, [toggleSidebar]);
+
+  // Reset flags when navigating to new video page
+  useEffect(() => {
+    if (isVideoPage) {
+      hasInitializedRef.current = false; // Reset for new video
+    }
+  }, [location.pathname, isVideoPage]);
+
+  // ... ALL YOUR EXISTING VIDEO LOGIC (unchanged from previous version) ...
   const [settingsPanelVisible, setSettingsPanelVisible] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [resolution, setResolution] = useState('default');
-  // Change video speed
+
   const handleSpeedChange = (rate: number) => {
     setPlaybackRate(rate);
     if (videoRef.current) videoRef.current.playbackRate = rate;
   };
 
-  // Change video resolution (placeholder, for future multiple sources)
   const handleResolutionChange = (res: string) => {
     setResolution(res);
-    // If you have multiple sources, switch src here
   };
-  // Fullscreen logic
+
   const containerRef = useRef<HTMLDivElement>(null);
   const handleFullscreen = () => {
     const container = containerRef.current;
@@ -34,12 +80,14 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
       container.requestFullscreen();
     }
   };
+
   useEffect(() => {
     const video = videoRef.current;
     if (video) {
-      video.play().then(() => setIsPlaying(true)).catch(() => { });
+      video.play().then(() => setIsPlaying(true)).catch(() => {});
     }
   }, [src]);
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -62,6 +110,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
     }
   }, []);
 
+  // ... ALL OTHER FUNCTIONS EXACTLY THE SAME (handleVideoClick, handleVideoDoubleTap, etc.) ...
   const handleVideoClick = () => {
     handlePlayPause();
   };
@@ -96,7 +145,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
 
   const handleVideoTouch = (e: React.TouchEvent<HTMLVideoElement>) => {
     const now = Date.now();
-    const touchX = e.nativeEvent ? (e as any).nativeEvent.offsetX : e.touches[0].clientX; // clientX is fallback
+    const touchX = e.nativeEvent ? (e as any).nativeEvent.offsetX : e.touches[0].clientX;
     const width = e.currentTarget.offsetWidth;
     const third = width * 0.3;
 
@@ -122,7 +171,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   };
 
   const toggleVolumePanel = (e: React.MouseEvent) => {
-    e.stopPropagation(); // prevent closing due to overlay click
+    e.stopPropagation();
     setVolumePanelVisible(prev => !prev);
   };
 
@@ -142,7 +191,6 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
     return `${min}:${sec < 10 ? '0' : ''}${sec}`;
   };
 
-  // Idle / mouse movement logic
   const resetIdleTimer = () => {
     setControlsVisible(true);
     if (idleTimeoutRef.current) {
@@ -151,7 +199,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
     idleTimeoutRef.current = window.setTimeout(() => {
       setControlsVisible(false);
       setVolumePanelVisible(false);
-    }, 2000); // 2s after last movement
+    }, 2000);
   };
 
   const handleMouseMoveInContainer = () => {
@@ -168,7 +216,6 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Skip shortcuts if user is typing in an input or textarea
       const active = document.activeElement;
       const isTyping =
         active instanceof HTMLInputElement ||
@@ -198,6 +245,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
     };
   }, [handlePlayPause, handleVideoDoubleTap]);
 
+  // JSX RETURN SAME AS BEFORE - all controls unchanged
   return (
     <div className="video-player-bar" ref={containerRef}>
       <div
@@ -218,116 +266,44 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
           onTouchEnd={handleVideoTouch}
         />
         {controlsVisible && (
-          <div
-            className="video-player-bar__controls-overlay"
-            onClick={() => {
-              // click on empty bar area closes volume panel
-              if (volumePanelVisible) setVolumePanelVisible(false);
-            }}
-          >
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                handleVideoDoubleTap('left');
-              }}
-              className="video-player-bar__icon-btn"
-              title="Rewind 10s"
-            >
+          <div className="video-player-bar__controls-overlay" onClick={() => {
+            if (volumePanelVisible) setVolumePanelVisible(false);
+          }}>
+            {/* ALL YOUR CONTROLS EXACTLY THE SAME */}
+            <button onClick={e => { e.stopPropagation(); handleVideoDoubleTap('left'); }} className="video-player-bar__icon-btn" title="Rewind 10s">
               <FaBackward />
             </button>
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                handlePlayPause();
-              }}
-              className="video-player-bar__icon-btn"
-              title={isPlaying ? 'Pause' : 'Play'}
-            >
+            <button onClick={e => { e.stopPropagation(); handlePlayPause(); }} className="video-player-bar__icon-btn" title={isPlaying ? 'Pause' : 'Play'}>
               {isPlaying ? <FaPause /> : <FaPlay />}
             </button>
-
-            <div
-              className="video-player-bar__volume-btn-container"
-              style={{ position: 'relative', display: 'inline-block' }}
-              onClick={e => e.stopPropagation()}
-            >
-              <button
-                className="video-player-bar__icon-btn"
-                onClick={toggleVolumePanel}
-                title="Volume"
-              >
+            <div className="video-player-bar__volume-btn-container" style={{ position: 'relative', display: 'inline-block' }} onClick={e => e.stopPropagation()}>
+              <button className="video-player-bar__icon-btn" onClick={toggleVolumePanel} title="Volume">
                 <FaVolumeUp />
               </button>
               {volumePanelVisible && (
-                <div
-                  className="video-player-bar__volume-vertical-container"
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    bottom: '120%',
-                    transform: 'translateX(-50%)',
-                    zIndex: 10,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    height: '80px',
-                    justifyContent: 'flex-end',
-                  }}
-                >
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={volume}
-                    onChange={handleVolumeChange}
-                    className="video-player-bar__volume-vertical"
-                  />
+                <div className="video-player-bar__volume-vertical-container" style={{
+                  position: 'absolute', left: '50%', bottom: '120%', transform: 'translateX(-50%)',
+                  zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  height: '80px', justifyContent: 'flex-end',
+                }}>
+                  <input type="range" min={0} max={1} step={0.01} value={volume} onChange={handleVolumeChange} className="video-player-bar__volume-vertical" />
                 </div>
               )}
             </div>
-
-            <input
-              type="range"
-              min={0}
-              max={duration}
-              value={currentTime}
-              onChange={e => {
-                const time = Number(e.target.value);
-                setCurrentTime(time);
-                if (videoRef.current) videoRef.current.currentTime = time;
-              }}
-              className="video-player-bar__seek"
-            />
-            <span className="video-player-bar__time">
-              {formatTime(currentTime)} / {formatTime(duration)}
-            </span>
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                handleVideoDoubleTap('right');
-              }}
-              className="video-player-bar__icon-btn"
-              title="Forward 10s"
-            >
+            <input type="range" min={0} max={duration} value={currentTime} onChange={e => {
+              const time = Number(e.target.value);
+              setCurrentTime(time);
+              if (videoRef.current) videoRef.current.currentTime = time;
+            }} className="video-player-bar__seek" />
+            <span className="video-player-bar__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
+            <button onClick={e => { e.stopPropagation(); handleVideoDoubleTap('right'); }} className="video-player-bar__icon-btn" title="Forward 10s">
               <FaForward />
             </button>
-            <button
-              onClick={e => {
-                e.stopPropagation();
-                handleFullscreen();
-              }}
-              className="video-player-bar__icon-btn"
-              title="Fullscreen"
-            >
+            <button onClick={e => { e.stopPropagation(); handleFullscreen(); }} className="video-player-bar__icon-btn" title="Fullscreen">
               <FaExpand />
             </button>
             <div className="video-player-bar__settings-btn-container" style={{ position: 'relative', display: 'inline-block' }}>
-              <button
-                className="video-player-bar__icon-btn"
-                onClick={e => { e.stopPropagation(); setSettingsPanelVisible(v => !v); }}
-                title="Settings"
-              >
+              <button className="video-player-bar__icon-btn" onClick={e => { e.stopPropagation(); setSettingsPanelVisible(v => !v); }} title="Settings">
                 <FaCog />
               </button>
               {settingsPanelVisible && (
@@ -335,24 +311,16 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
                   <div className="video-player-bar__settings-section">
                     <span className="video-player-bar__settings-label">Speed</span>
                     {[0.5, 1, 1.5, 2].map(rate => (
-                      <button
-                        key={rate}
-                        className={`video-player-bar__settings-option${playbackRate === rate ? ' active' : ''}`}
-                        onClick={() => handleSpeedChange(rate)}
-                      >
+                      <button key={rate} className={`video-player-bar__settings-option${playbackRate === rate ? ' active' : ''}`} onClick={() => handleSpeedChange(rate)}>
                         {rate}x
                       </button>
                     ))}
                   </div>
                   <div className="video-player-bar__settings-section">
                     <span className="video-player-bar__settings-label">Resolution</span>
-                    <button
-                      className={`video-player-bar__settings-option${resolution === 'default' ? ' active' : ''}`}
-                      onClick={() => handleResolutionChange('default')}
-                    >
+                    <button className={`video-player-bar__settings-option${resolution === 'default' ? ' active' : ''}`} onClick={() => handleResolutionChange('default')}>
                       Default
                     </button>
-                    {/* Add more resolution options if available */}
                   </div>
                 </div>
               )}

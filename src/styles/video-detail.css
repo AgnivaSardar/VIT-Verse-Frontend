@@ -169,6 +169,11 @@
   color: #cbd5e1;
 }
 
+/* Preserve newlines and spacing in video descriptions */
+.collapsible-text p {
+  white-space: pre-wrap;
+}
+
 .collapsible-text .link {
   color: #60a5fa;
   background: transparent;
@@ -410,6 +415,11 @@
   margin: 4px 0 0;
   font-size: 14px;
   color: #e7ecf5;
+}
+
+/* Preserve user line breaks in comments */
+.comment-body {
+  white-space: pre-wrap;
 }
 
 .sidebar-card {

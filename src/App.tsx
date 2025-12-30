@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { UIProvider } from './contexts/UIContext';
 import Header from './components/common/Header';
 import Sidebar from './components/common/Sidebar';
+import VideoNavSidebarController from './components/common/VideoNavSidebarController';
 import { Toaster } from 'react-hot-toast';
 import Home from './pages/Home';
 import Channel from './pages/Channel';
@@ -45,6 +46,7 @@ function App() {
             <div className="App">
               <Header />
               <Sidebar />
+              <VideoNavSidebarController />
               <main>
                 <Toaster position="top-right" />
                 <CookieConsent />

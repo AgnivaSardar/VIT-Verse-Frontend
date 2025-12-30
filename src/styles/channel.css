@@ -49,6 +49,11 @@
   margin-bottom: 16px;
 }
 
+/* Preserve user-entered line breaks in channel descriptions */
+.channel-details p {
+  white-space: pre-wrap;
+}
+
 .channel-stats {
   display: flex;
   gap: 24px;
