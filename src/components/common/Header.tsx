@@ -116,7 +116,6 @@ const Header: React.FC = () => {
   return (
     <header>
       <div className="logo-section">
-        <FaBars className="menu-icon" onClick={toggleSidebar} />
         <Link to="/" className="brand" aria-label="Go to home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <img src="/vitverselogo2.png" alt="VIT-Verse Logo" className="site-logo" style={{ height: 40,marginLeft:18, marginRight: 18, verticalAlign: 'middle' }} />
           <h1 style={{ margin: 0, fontWeight: 700, fontSize: '1.6rem', color: 'inherit', letterSpacing: 1 }}>
@@ -162,9 +161,21 @@ const Header: React.FC = () => {
               Log In
             </button>
           ) : (
-            <button className="user-action-btn user-greet mobile-hidden" disabled>
-              Hi, {user.name}
-            </button>
+            (() => {
+              // Compute a friendly display name. If stored name looks like an email, prefer the part before '@' or the explicit email/name fields.
+              const rawName = (user as any).name || (user as any).userName || '';
+              const email = (user as any).email || (user as any).userEmail || '';
+              let displayName = rawName;
+              if (!displayName && email) displayName = email.split('@')[0];
+              if (displayName && displayName.includes('@') && email) displayName = email.split('@')[0];
+              if (!displayName) displayName = 'User';
+
+              return (
+                <button className="user-action-btn user-greet mobile-hidden" disabled>
+                  Hi, {displayName}
+                </button>
+              );
+            })()
           )}
         </div>
 

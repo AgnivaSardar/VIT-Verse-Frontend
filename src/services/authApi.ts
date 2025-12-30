@@ -41,11 +41,11 @@ export interface ChangePasswordRequest {
 
 export const authApi = {
   login: (data: LoginRequest) =>
-    api.post<LoginResponse>('auth/login', data),
+    api.post<LoginResponse>('auth/login', data),  // ✅ FIXED: /api/auth/login
   register: (data: RegisterRequest) =>
-    api.post<User>('auth/register', data),
+    api.post<User>('auth/register', data),       // ✅ FIXED: /api/auth/register
   getUser: (userId: number) =>
-    api.get<User>(`users/${userId}`),
+    api.get<User>(`users/${userId}`),            // ✅ FIXED: /api/users
   requestPasswordChange: (data: RequestPasswordChangeRequest) =>
     api.post('auth/request-password-change', data),
   changePassword: (data: ChangePasswordRequest) =>

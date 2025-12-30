@@ -1,4 +1,5 @@
 import React, { createContext, useReducer, useEffect, type ReactNode } from 'react';
+import { authApi } from '../../services/authApi';  // ✅ Import authApi
 
 export interface User {
   id: number;
@@ -77,21 +78,29 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-  const AUTH_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
   useEffect(() => {
-    // Restore token from localStorage on mount
     const token = localStorage.getItem('authToken');
     const user = localStorage.getItem('authUser');
     console.log('🔍 AuthContext - Restoring from localStorage:', { token: !!token, user });
     if (token && user) {
       try {
         const parsedUser = JSON.parse(user);
-        console.log('🔍 AuthContext - Parsed user:', parsedUser);
-        console.log('🔍 AuthContext - isSuperAdmin:', parsedUser.isSuperAdmin);
+        // Normalize stored user shape to ensure we show a proper display name
+        const normalized = {
+          id: Number(parsedUser?.id ?? parsedUser?.userID ?? 0),
+          name: String(parsedUser?.name ?? parsedUser?.userName ?? parsedUser?.userEmail ?? parsedUser?.email ?? ''),
+          email: String(parsedUser?.email ?? parsedUser?.userEmail ?? ''),
+          role: parsedUser?.role ?? 'student',
+        } as User;
+        // If the stored name looks like an email and we have a separate userName, prefer that
+        if (normalized.name.includes('@') && parsedUser?.userName) {
+          normalized.name = parsedUser.userName;
+        }
+
         dispatch({
           type: 'RESTORE_TOKEN',
-          payload: { user: parsedUser, token },
+          payload: { user: normalized, token },
         });
       } catch (error) {
         console.error('🔍 AuthContext - Error parsing user:', error);
@@ -104,28 +113,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
+  // ✅ FIXED: USE authApi.login() - Vite proxy magic!
   const login = async (identifier: string, password: string) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch(`${AUTH_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ identifier, password }),
-      });
+      const response = await authApi.login({ identifier, password });
+      
+      const data = response.data || response;
+      const token = data.token;
+      // Backend returns { token, user: { id, name, email, role, ... } }
+      const payloadUser = (data.user ?? data) as any;
 
-      if (!response.ok) throw new Error('Login failed');
-
-      const data = await response.json();
-      const token = data.data?.token || data.token;
-      const payloadUser = data.data?.user || data.user || data.data;
       const user: User = {
-        id: payloadUser?.id || payloadUser?.userID,
-        name: payloadUser?.name || payloadUser?.userName || identifier,
-        email: payloadUser?.email || payloadUser?.userEmail || identifier,
-        role: payloadUser?.role || 'student',
-        isEmailVerified: payloadUser?.isEmailVerified ?? true,
-        isSuperAdmin: payloadUser?.isSuperAdmin ?? false,
+        id: Number(payloadUser?.id ?? payloadUser?.userID ?? 0),
+        name: String(payloadUser?.name ?? payloadUser?.userName ?? identifier),
+        email: String(payloadUser?.email ?? payloadUser?.userEmail ?? identifier),
+        role: (payloadUser?.role as any) || 'student',
       };
 
       localStorage.setItem('authToken', token);
@@ -151,17 +154,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }) => {
     dispatch({ type: 'SET_LOADING', payload: true });
     try {
-      const response = await fetch(`${AUTH_BASE}/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) throw new Error('Registration failed');
-
-      await response.json();
-      // After registration, user needs to verify OTP - don't auto-login
+      await authApi.register(data);  // ✅ Use authApi!
       dispatch({ type: 'SET_LOADING', payload: false });
     } catch (error) {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -169,18 +162,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    // Call backend to clear cookie
-    fetch(`${AUTH_BASE}/auth/logout`, {
-      method: 'POST',
-      credentials: 'include'
-    }).catch(err => console.error('Logout failed:', err))
-      .finally(() => {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
-        dispatch({ type: 'LOGOUT' });
-        window.location.reload();
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', {  // ✅ Relative URL!
+        method: 'POST',
+        credentials: 'include'
       });
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authUser');
+      dispatch({ type: 'LOGOUT' });
+      window.location.reload();
+    }
   };
 
   const value: AuthContextType = {

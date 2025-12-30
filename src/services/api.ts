@@ -31,7 +31,11 @@ export function uploadWithProgress(endpoint: string, formData: FormData, onProgr
     xhr.send(formData);
   });
 }
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
+const API_BASE = import.meta.env.DEV 
+  ? '/api'  // Vite proxy → http://localhost:5173/api → backend
+  : import.meta.env.VITE_API_URL || 'https://18.60.156.89:5443/api';
+
 
 export interface ApiResponse<T> {
   data: T;

@@ -11,6 +11,14 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    open: true
+    open: true,
+    proxy: {
+      '/api': {
+        target: 'https://18.60.156.89:5443',
+        changeOrigin: true,
+        secure: false,  // Bypass self-signed SSL
+        rewrite: (path) => path.replace(/^\/api/, '/api')
+      }
+    }
   }
 })
