@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   FaBars,
   FaVideo,
@@ -35,6 +35,7 @@ const Header: React.FC = () => {
   const { user, logout } = useAuth();
   const { theme, resolvedTheme, setTheme } = useTheme();
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
+  const location = useLocation();
 
   // Sync sidebar state to body class - inverted to 'sidebar-open'
   useEffect(() => {
@@ -46,6 +47,70 @@ const Header: React.FC = () => {
       document.body.classList.add('sidebar-hidden');
     }
   }, [isSidebarOpen]);
+
+  // Hide header on downward scroll (mobile); show when scrolling up
+  useEffect(() => {
+    let lastY = 0;
+    let ticking = false;
+    const THRESH = 8; // smaller threshold for snappier reveal
+    const MIN_HIDE = 60; // don't hide when near top
+
+    const mainEl = document.querySelector('main');
+
+    const isMainScrollable = () => {
+      try {
+        return !!mainEl && (mainEl as HTMLElement).scrollHeight > (mainEl as HTMLElement).clientHeight;
+      } catch {
+        return false;
+      }
+    };
+
+    const getScrollY = () => (isMainScrollable() ? (mainEl as HTMLElement).scrollTop : window.scrollY || 0);
+
+    lastY = getScrollY();
+
+    const onScrollInternal = () => {
+      if (window.innerWidth > 768) return;
+      const y = getScrollY();
+
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const delta = y - lastY;
+          if (delta > THRESH && y > MIN_HIDE) {
+            document.body.classList.add('header-hidden');
+          } else if (delta < -THRESH) {
+            document.body.classList.remove('header-hidden');
+          }
+          lastY = y;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    // Attach both so we catch scrolls whether the page scrolls or the main container scrolls
+    const hosts: EventTarget[] = [window];
+    if (mainEl) hosts.push(mainEl as EventTarget);
+
+    hosts.forEach((h) => h.addEventListener('scroll', onScrollInternal as EventListener, { passive: true }));
+
+    const onResize = () => {
+      // reset header visibility and baseline when viewport changes
+      document.body.classList.remove('header-hidden');
+      lastY = getScrollY();
+    };
+    window.addEventListener('resize', onResize);
+
+    return () => {
+      hosts.forEach((h) => h.removeEventListener('scroll', onScrollInternal as EventListener));
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  // Ensure header is visible when navigating to a new route
+  useEffect(() => {
+    document.body.classList.remove('header-hidden');
+  }, [location.pathname]);
 
   useEffect(() => {
     if (user) {
@@ -116,6 +181,7 @@ const Header: React.FC = () => {
   return (
     <header>
       <div className="logo-section">
+        <FaBars className="menu-icon" onClick={toggleSidebar} aria-label="Toggle sidebar" />
         <Link to="/" className="brand" aria-label="Go to home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
           <img src="/vitverselogo2.png" alt="VIT-Verse Logo" className="site-logo" style={{ height: 40,marginLeft:18, marginRight: 18, verticalAlign: 'middle' }} />
           <h1 style={{ margin: 0, fontWeight: 700, fontSize: '1.6rem', color: 'inherit', letterSpacing: 1 }}>

@@ -36,16 +36,55 @@ const ChannelEdit: React.FC = () => {
       navigate('/login', { replace: true });
       return;
     }
-    if (!isAuthenticated || !channelId) return;
+
+    // If the route doesn't have a valid numeric channel id, try to resolve the
+    // user's own channel (if authenticated) and redirect there. Otherwise show
+    // a friendly message and direct them to create a channel.
+    if (!isAuthenticated || !channelId || Number.isNaN(channelId)) {
+      setLoading(false);
+      if (!isAuthenticated) return;
+
+      (async () => {
+        try {
+          const myResp = await channelsApi.getMyChannel();
+          const myChan = unwrap<Channel | null>(myResp);
+          if (myChan && (myChan.id || myChan.channelID)) {
+            const idToUse = (myChan.id ?? myChan.channelID) as any;
+            navigate(`/channel/${idToUse}/edit`, { replace: true });
+            return;
+          }
+          toast('No personal channel found. Create one to start editing.');
+          navigate('/channels/create');
+        } catch (err) {
+          console.warn('Could not auto-resolve my channel', err);
+          toast('Invalid channel id');
+        }
+      })();
+      return;
+    }
     const fetchChannel = async () => {
       setLoading(true);
       try {
         const response = await channelsApi.getById(channelId);
+        console.debug('Channel edit: raw response', response);
         const data = unwrap<Channel | undefined>(response);
-        setChannel(data ?? null);
+        if (!data) {
+          toast.error('Channel not found or you do not have permission to edit it');
+          setChannel(null);
+        } else {
+          setChannel(data);
+        }
       } catch (error) {
-        toast.error('Failed to load channel');
-        console.error(error);
+        // Provide more specific feedback for common HTTP errors
+        const msg = (error && error.message) || String(error);
+        if (msg.includes('404')) {
+          toast.error('Channel not found (404)');
+        } else if (msg.includes('403')) {
+          toast.error('Access denied (403) — you cannot edit this channel');
+        } else {
+          toast.error('Failed to load channel');
+        }
+        console.error('Channel fetch error:', error);
       } finally {
         setLoading(false);
       }

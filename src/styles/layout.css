@@ -192,11 +192,9 @@ aside.collapsed~main {
   --current-sidebar-width: 60px;
 }
 
-/* Explicit overrides for collapsed state */
-.home-main.expanded {
-  left: 60px !important;
-  width: calc(100% - 60px) !important;
-}
+/* Explicit overrides for collapsed state are handled by the --current-sidebar-width variable
+   and the sibling selector `aside.collapsed ~ main`. Removing hard-coded .home-main.expanded
+   to avoid forcing a persistent left gap. */
 
 /* --- Floating Upload Button --- */
 .upload-btn {
@@ -227,8 +225,11 @@ aside.collapsed~main {
 }
 
 @media (max-width: 768px) {
+  /* Use a fixed header height variable on small screens so main content can
+     reliably offset itself below the header. This replaces the previous
+     `auto` value which made spacing unpredictable. */
   :root {
-    --header-height: auto;
+    --header-height: 55px;
   }
 
   header {
@@ -246,6 +247,25 @@ aside.collapsed~main {
     border-bottom: 2px solid var(--border);
     z-index: 2001;
     /* Above main */
+  }
+
+  /* Hide-on-scroll: when body.header-hidden is set, slide header off-screen and remove top gap
+     so the content fills the viewport. Only active on mobile (max-width: 768px). */
+  header {
+    transition: transform 0.22s ease, opacity 0.22s ease;
+    will-change: transform;
+  }
+
+  body.header-hidden header {
+    transform: translateY(-110%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  body.header-hidden main,
+  body.header-hidden .home-main {
+    margin-top: 0 !important;
+    top: 0 !important;
   }
 
   aside {
@@ -333,7 +353,7 @@ aside.collapsed~main {
     padding: 12px !important;
     height: auto !important;
     min-height: calc(100vh - 130px);
-    margin-top: 130px !important;
+    margin-top: var(--header-height) !important;
     /* Fixed offset for dynamic header */
     overflow-y: visible !important;
     box-sizing: border-box;
