@@ -30,7 +30,7 @@ interface VideoEditFormData {
 const VideoEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const videoIdRaw = id; // may be numeric or publicID
-  const { token, isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [video, setVideo] = useState<Video | null>(null);
   const [formData, setFormData] = useState<VideoEditFormData>({ title: '', description: '', tags: [] });
@@ -65,7 +65,7 @@ const VideoEdit: React.FC = () => {
                   ? (data.tags as { id: number; name: string }[]).map(tagObj => tagObj.name)
                   : (data.tags as string[]))
               : [],
-            playlistID: (data.playlistID ?? undefined) as number | undefined,
+            playlistID: (data as any).playlistID ?? undefined,
           });
         }
       } catch (error) {

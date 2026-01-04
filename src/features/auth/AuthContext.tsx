@@ -122,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = response.data || response;
       const token = data.token;
       // Backend returns { token, user: { id, name, email, role, ... } }
-      const payloadUser = (data.user ?? data) as any;
+      const payloadUser = (data as any).user ?? (data as any);
 
       const user: User = {
         id: Number(payloadUser?.id ?? payloadUser?.userID ?? 0),

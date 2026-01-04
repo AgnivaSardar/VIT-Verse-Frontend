@@ -18,7 +18,7 @@ function getRandomPipeY() {
 
 const FlappyBird: React.FC<{ onClose?: () => void }> = ({ onClose }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [score] = useState(0);
+  const [, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
   const [gameRunning, setGameRunning] = useState(false);
 

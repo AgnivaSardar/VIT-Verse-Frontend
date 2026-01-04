@@ -17,10 +17,6 @@ type ChannelWithPublic = {
   publicID?: string;
 };
 
-function getPlaylistId(playlist: PlaylistDetail): string | number {
-  return playlist.publicID || playlist.id || 0;
-}
-
 const PlaylistView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const playlistId = id; // Could be numeric OR public ID string

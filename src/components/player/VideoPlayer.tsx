@@ -4,10 +4,10 @@ import '../../styles/video-detail.css';
 interface VideoPlayerProps {
 	src?: string;
 	poster?: string;
-	title: string;
+	title?: string;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, poster, title }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ src, poster }) => {
 	const videoRef = useRef<HTMLVideoElement>(null);
 
 	useEffect(() => {

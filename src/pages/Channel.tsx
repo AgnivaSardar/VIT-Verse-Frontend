@@ -225,6 +225,7 @@ const Channel: React.FC = () => {
     }
     try {
       const targetChannelId = channel?.channelID ?? channelId;
+      if (targetChannelId === undefined) return;
       if (subscribed) {
         await channelsApi.unsubscribe(targetChannelId, user.id!);
         setSubscribed(false);

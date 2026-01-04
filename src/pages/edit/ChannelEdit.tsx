@@ -76,7 +76,7 @@ const ChannelEdit: React.FC = () => {
         }
       } catch (error) {
         // Provide more specific feedback for common HTTP errors
-        const msg = (error && error.message) || String(error);
+        const msg = (error && (error as any).message) || String(error);
         if (msg.includes('404')) {
           toast.error('Channel not found (404)');
         } else if (msg.includes('403')) {
