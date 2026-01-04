@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { FaUsers, FaVideo, FaCalendarAlt, FaChild, FaLink } from 'react-icons/fa';
+import { FaUsers, FaVideo, FaCalendarAlt, FaChild } from 'react-icons/fa';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
 import VideoCard, { type Video } from '../components/common/VideoCard';
@@ -48,7 +48,7 @@ const Channel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>('videos');
   const [isOwner, setIsOwner] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editingVideo, setEditingVideo] = useState<any | null>(null);
+  const [editingVideo] = useState<any | null>(null);
   const [deleteModal, setDeleteModal] = useState<{ show: boolean; playlistId?: number; playlistName?: string }>({
     show: false,
   });
@@ -125,7 +125,7 @@ const Channel: React.FC = () => {
                 const plChannelPublicID = pl.channelPublicID ?? pl.channel?.publicID;
                 // Additional fallbacks: nested user.channels or first video channel
                 const fallbackChannelPublicID = pl.user?.channels?.[0]?.publicID || (pl.videos?.[0]?.video?.channel?.publicID);
-                const fallbackChannelID = pl.user?.channels?.[0]?.channelID || (pl.videos?.[0]?.video?.channel?.channelID);
+                // fallbackChannelID derived for fallback logic (used in error cases)
                 // Numeric channel id from current channel data
                 const numericChannelID = Number(channelData.channelID ?? channelData.id ?? 0);
                     // Note: intentionally NOT counting playlists just because they contain a video from this channel
@@ -226,11 +226,11 @@ const Channel: React.FC = () => {
     try {
       const targetChannelId = channel?.channelID ?? channelId;
       if (subscribed) {
-        await channelsApi.unsubscribe(targetChannelId, user.id);
+        await channelsApi.unsubscribe(targetChannelId, user.id!);
         setSubscribed(false);
         toast.success('Unsubscribed');
       } else {
-        await channelsApi.subscribe(targetChannelId, user.id);
+        await channelsApi.subscribe(targetChannelId, user.id!);
         setSubscribed(true);
         toast.success('Subscribed!');
       }
@@ -614,7 +614,7 @@ const Channel: React.FC = () => {
                               </button>
                               <button
                                 className="modal-btn confirm"
-                                onClick={() => openDeleteVideoModal(vidId, v.title)}
+                                onClick={() => openDeleteVideoModal(Number(vidId), v.title)}
                                 disabled={deletingVideoId === vidId}
                               >
                                 {deletingVideoId === vidId ? 'Deleting...' : 'Delete'}

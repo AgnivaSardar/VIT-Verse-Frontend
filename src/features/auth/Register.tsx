@@ -16,10 +16,28 @@ const Register: React.FC = () => {
 	const isValidEmailDomain = (value: string) =>
 		value.endsWith('@vitstudent.ac.in') || value.endsWith('@vit.ac.in');
 
+	// Detect role from email domain. Returns 'student' | 'teacher' | null
+	const detectRoleFromEmail = (value: string): 'student' | 'teacher' | null => {
+		const v = value.toLowerCase();
+		if (v.endsWith('@vitstudent.ac.in')) return 'student';
+		if (v.endsWith('@vit.ac.in')) return 'teacher';
+		return null;
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!isValidEmailDomain(email)) {
 			toast.error('Email must end with @vitstudent.ac.in (students) or @vit.ac.in (professors)');
+			return;
+		}
+
+		// Enforce role/domain consistency: if the email domain implies a role,
+		// disallow registering with the opposite role.
+		const detected = detectRoleFromEmail(email);
+		if (detected && detected !== role) {
+			toast.error(
+				`Your email domain (${email.split('@')[1]}) indicates a ${detected} account. Please select the ${detected} role or use an appropriate email.`
+			);
 			return;
 		}
 		if (password.length < 8) {
@@ -62,7 +80,12 @@ const Register: React.FC = () => {
 						id="email-input"
 						name="email"
 						value={email}
-						onChange={(e) => setEmail(e.target.value.trim())}
+						onChange={(e) => {
+							const v = e.target.value.trim();
+							setEmail(v);
+							const detected = detectRoleFromEmail(v);
+							if (detected) setRole(detected);
+						}}
 						type="email"
 						placeholder="name@vitstudent.ac.in or name@vit.ac.in"
 						required
@@ -79,10 +102,26 @@ const Register: React.FC = () => {
 						required
 					/>
 					<label htmlFor="role-select">Role</label>
-					<select id="role-select" name="role" value={role} onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}>
-					<option value="student">Student</option>
-					<option value="teacher">Teacher</option>
-				</select>
+					{(() => {
+						const detectedRole = detectRoleFromEmail(email);
+						return (
+							<>
+								<select
+									id="role-select"
+									name="role"
+									value={role}
+									onChange={(e) => setRole(e.target.value as 'student' | 'teacher')}
+									disabled={Boolean(detectedRole)}
+								>
+									<option value="student">Student</option>
+									<option value="teacher">Teacher</option>
+								</select>
+								{detectedRole && (
+									<p className="form-hint">Role is set to <strong>{detectedRole}</strong> based on your email domain.</p>
+								)}
+							</>
+						);
+					})()}
 				{role === 'student' ? (
 					<>
 						<label htmlFor="student-reg">Student Registration Number</label>

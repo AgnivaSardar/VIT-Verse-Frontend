@@ -18,7 +18,7 @@ type ChannelWithPublic = {
 };
 
 function getPlaylistId(playlist: PlaylistDetail): string | number {
-  return playlist.publicID || playlist.id;
+  return playlist.publicID || playlist.id || 0;
 }
 
 const PlaylistView: React.FC = () => {
@@ -60,7 +60,7 @@ const PlaylistView: React.FC = () => {
     if (!window.confirm('Remove this video from playlist?')) return;
 
     try {
-      await playlistsApi.removeVideo(playlistId, playlistVideoId);
+      await playlistsApi.removeVideo(playlistId!, playlistVideoId);
       setPlaylist((prev) =>
         prev
           ? {
