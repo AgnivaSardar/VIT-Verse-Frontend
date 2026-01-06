@@ -11,7 +11,8 @@ const VideoNavSidebarController: React.FC = () => {
 
   useEffect(() => {
     const isVideo = VIDEO_PATH_RE.test(location.pathname);
-    console.debug('[VideoNav] route change', { path: location.pathname, isVideo, isSidebarOpen, navCollapsed: navCollapsedByVideo.current });
+    const isMobile = window.innerWidth <= 768;
+    console.debug('[VideoNav] route change', { path: location.pathname, isVideo, isSidebarOpen, isMobile, navCollapsed: navCollapsedByVideo.current });
 
     if (isVideo) {
       // entering a video page: collapse if currently open
@@ -25,12 +26,15 @@ const VideoNavSidebarController: React.FC = () => {
         }
       }
     } else {
-      // For any non-video navigation, ensure sidebar is open (user wanted it visible)
-      try {
-        console.debug('[VideoNav] opening sidebar on non-video navigation');
-        openSidebar();
-      } catch (e) {
-        console.warn('[VideoNav] failed to open sidebar', e);
+      // For non-video navigation on DESKTOP only, ensure sidebar is open
+      // On mobile, leave it closed unless user explicitly opens it
+      if (!isMobile) {
+        try {
+          console.debug('[VideoNav] opening sidebar on non-video navigation (desktop)');
+          openSidebar();
+        } catch (e) {
+          console.warn('[VideoNav] failed to open sidebar', e);
+        }
       }
       navCollapsedByVideo.current = false;
     }
