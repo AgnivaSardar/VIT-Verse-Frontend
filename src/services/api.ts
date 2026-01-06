@@ -1,36 +1,63 @@
-// Upload with progress support using XMLHttpRequest
-export function uploadWithProgress(endpoint: string, formData: FormData, onProgress: (percent: number) => void, method: string = 'POST') {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-    xhr.open(method, buildUrl(endpoint));
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-    }
-    xhr.setRequestHeader('x-bypass-rate-limit', '1');
+export interface UploadRequest<T = any> {
+  promise: Promise<T>;
+  cancel: () => void;
+  xhr: XMLHttpRequest;
+}
+
+// Upload with progress support using XMLHttpRequest + cancelation hook
+export function uploadWithProgress(endpoint: string, formData: FormData, onProgress: (percent: number) => void, method: string = 'POST'): UploadRequest<any> {
+  const xhr = new XMLHttpRequest();
+  xhr.withCredentials = true;
+  xhr.open(method, buildUrl(endpoint));
+  const token = localStorage.getItem('authToken');
+  if (token) {
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+  }
+  xhr.setRequestHeader('x-bypass-rate-limit', '1');
+
+  const promise = new Promise((resolve, reject) => {
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100);
         onProgress(percent);
       }
     };
+
     xhr.onload = () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
           const json = JSON.parse(xhr.responseText);
           resolve(json);
-        } catch (e) {
+        } catch (_e) {
           resolve({ data: null });
         }
       } else {
         reject(new Error(`HTTP Error: ${xhr.status}`));
       }
     };
+
     xhr.onerror = () => reject(new Error('Upload failed'));
+
+    xhr.onabort = () => {
+      const abortErr = new Error('Upload cancelled');
+      (abortErr as any).code = 'UPLOAD_CANCELLED';
+      reject(abortErr);
+    };
+
     xhr.send(formData);
   });
+
+  return {
+    promise,
+    cancel: () => xhr.abort(),
+    xhr,
+  };
 }
+
+export const isUploadCancelled = (error: unknown): boolean => {
+  const err = error as any;
+  return err?.code === 'UPLOAD_CANCELLED' || err?.message === 'Upload cancelled' || err?.name === 'AbortError';
+};
 
 const API_BASE = import.meta.env.DEV 
   ? '/api'  // Vite proxy → http://localhost:5173/api → backend

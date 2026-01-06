@@ -4,14 +4,14 @@ import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/common/Header';
 import Sidebar from '../components/common/Sidebar';
-import { videosApi, pollProcessingProgress } from '../services/videosApi';
+import { videosApi, pollProcessingProgress, isUploadCancelled } from '../services/videosApi';
 import { tagsApi, type Tag } from '../services/tagsApi';
 import { channelsApi } from '../services/channelsApi';
 import { playlistsApi, type Playlist } from '../services/playlistsApi';
 import { useAuth } from '../hooks/useAuth';
+import type { UploadRequest } from '../services/api';
 import '../styles/layout.css';
 import '../styles/upload.css';
-import FlappyBird from '../components/ui/FlappyBird';
 
 interface VideoFormData {
   title: string;
@@ -32,6 +32,7 @@ const Upload: React.FC = () => {
   });
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [activeUpload, setActiveUpload] = useState<UploadRequest<any> | null>(null);
   const [processing, setProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState<number | null>(null);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
@@ -43,21 +44,7 @@ const Upload: React.FC = () => {
   const [newTagName, setNewTagName] = useState('');
   const [hasChannel, setHasChannel] = useState<boolean | null>(null);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [showFlappy, setShowFlappy] = useState(true);
-  const [manualFlappy, setManualFlappy] = useState(false);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Shortcut: Alt + B to toggle Flappy Bird for dev
-      if (e.altKey && e.code === 'KeyB') {
-        e.preventDefault();
-        setManualFlappy(prev => !prev);
-        setShowFlappy(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+ 
 
   useEffect(() => {
     if (!token) {
@@ -222,6 +209,20 @@ const Upload: React.FC = () => {
     }
   };
 
+  const handleCancelUpload = () => {
+    if (!activeUpload) return;
+    activeUpload.cancel();
+    setProcessing(false);
+    setUploading(false);
+    setUploadProgress(0);
+    setProcessingProgress(null);
+    setProcessingStatus(null);
+    setProcessingError(null);
+    setActiveUpload(null);
+    setFormData((prev) => ({ ...prev, file: undefined, thumbnail: undefined }));
+    toast.success('Upload cancelled. No data was saved.');
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -255,12 +256,16 @@ const Upload: React.FC = () => {
       }
 
       setUploadProgress(0);
-      const uploadRes = await videosApi.uploadWithProgress(uploadFormData, (percent: number) => {
+      const uploadRequest = videosApi.uploadWithProgress(uploadFormData, (percent: number) => {
         setUploadProgress(percent);
         if (percent === 100) {
           setProcessing(true);
         }
       });
+
+      setActiveUpload(uploadRequest);
+
+      const uploadRes = await uploadRequest.promise;
       setUploadProgress(100);
       setProcessing(true);
       // Use returned publicID if available, else fallback to vidID for polling
@@ -276,10 +281,16 @@ const Upload: React.FC = () => {
       setUploadProgress(0);
     } catch (error: any) {
       setProcessing(false);
+      setActiveUpload(null);
+      if (isUploadCancelled(error)) {
+        toast.success('Upload cancelled. No data was saved.');
+        return;
+      }
       const errorMsg = error?.response?.data?.message || 'Upload failed. Please try again.';
       toast.error(errorMsg);
       console.error(error);
     } finally {
+      setActiveUpload(null);
       setUploading(false);
       setProcessing(false);
     }
@@ -331,23 +342,7 @@ const Upload: React.FC = () => {
       <main>
         <div className="upload-container">
           <div className="upload-header">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <h1>Upload Video</h1>
-              <button
-                type="button"
-                onClick={() => { setManualFlappy(true); setShowFlappy(true); }}
-                style={{
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'help',
-                  fontSize: '20px',
-                  opacity: 0.6
-                }}
-                title="Dev Tool: Play Flappy Bird (Alt+B)"
-              >
-                🐦
-              </button>
-            </div>
+            <h1>Upload Video</h1>
             <p>Share your lectures, events, or projects with the VIT-Verse community</p>
           </div>
 
@@ -561,12 +556,6 @@ const Upload: React.FC = () => {
                 </div>
               )}
             </div>
-
-
-            {(uploading || processing || manualFlappy) && showFlappy && (
-              <FlappyBird onClose={() => { setShowFlappy(false); setManualFlappy(false); }} />
-            )}
-
             {(uploading || processing) && (
               <div className="progress-section">
                 <div className={`progress-bar ${processing && uploadProgress === 100 ? 'processing' : ''}`}>
@@ -584,6 +573,19 @@ const Upload: React.FC = () => {
                   {uploadProgress === 100 && !processing && !processingError && 'Finalizing...'}
                   {processingError && <span className="error-text">{processingError}</span>}
                 </p>
+                <div className="progress-actions">
+                  <button
+                    type="button"
+                    onClick={handleCancelUpload}
+                    disabled={!activeUpload || uploadProgress >= 100}
+                    className="cancel-upload-button"
+                  >
+                    Cancel upload
+                  </button>
+                  {uploadProgress >= 100 && (
+                    <span className="upload-hint">Upload already reached the server; cancellation is disabled.</span>
+                  )}
+                </div>
               </div>
             )}
 

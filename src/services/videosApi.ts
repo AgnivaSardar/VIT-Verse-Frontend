@@ -1,5 +1,4 @@
-
-import api, { uploadWithProgress } from './api';
+import api, { uploadWithProgress, isUploadCancelled, type UploadRequest } from './api';
 import type { Video } from '../types/video';
 
 // Poll backend for processing progress
@@ -25,7 +24,7 @@ export const videosApi = {
   getAll: () => api.get<Video[]>('videos'),
   getById: (id: number | string) => api.get<Video>(`videos/${id}`),
   upload: (formData: FormData) => api.upload('videos/upload', formData),
-  uploadWithProgress: (formData: FormData, onProgress: (percent: number) => void) =>
+  uploadWithProgress: (formData: FormData, onProgress: (percent: number) => void): UploadRequest<any> =>
     uploadWithProgress('videos/upload', formData, onProgress),
   // Related queries
   getByChannel: (channelId: number | string, limit: number = 10) =>
@@ -75,4 +74,6 @@ export const videosApi = {
   unlike: (userId: number | string, videoId: number | string) =>
     api.deleteWithBody('likes', { userID: userId, vidID: videoId }),
 };
+
+export { isUploadCancelled };
 
