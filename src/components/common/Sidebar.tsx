@@ -50,6 +50,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
 
   // Close sidebar on link click for mobile
   const handleLinkClick = () => {
+    console.log('Link clicked! isMobile:', isMobile, 'isSidebarOpen:', isSidebarOpen);
     if (isMobile) {
       // Close sidebar immediately when link is clicked
       closeSidebar();
@@ -132,7 +133,11 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
       {isSidebarOpen && isMobile && (
         <div 
           className="sidebar-backdrop" 
-          onClick={closeSidebar}
+          onClick={(e) => {
+            console.log('Backdrop clicked!');
+            e.stopPropagation();
+            closeSidebar();
+          }}
           style={{
             position: 'fixed',
             top: 0,
