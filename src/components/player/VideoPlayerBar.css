@@ -78,6 +78,26 @@
   justify-content: center;
 }
 
+/* Fullscreen mode styling */
+.video-player-bar__container:fullscreen,
+.video-player-bar__container:-webkit-full-screen,
+.video-player-bar__container:-moz-full-screen,
+.video-player-bar__container:-ms-fullscreen {
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+.video-player-bar__container:fullscreen .video-player-bar__video,
+.video-player-bar__container:-webkit-full-screen .video-player-bar__video,
+.video-player-bar__container:-moz-full-screen .video-player-bar__video,
+.video-player-bar__container:-ms-fullscreen .video-player-bar__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .video-player-bar__video {
   width: 100%;
   height: 100%;
@@ -177,35 +197,101 @@
   justify-content: flex-end !important;
 }
 
+/* Pause Overlay */
+.video-player-bar__pause-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.video-player-bar__pause-icon {
+  background: rgba(99, 102, 241, 0.9);
+  color: #fff;
+  border-radius: 50%;
+  padding: 2rem;
+  font-size: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  animation: pauseIconFade 0.3s ease-in;
+}
+
+@keyframes pauseIconFade {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .video-player-bar__controls-overlay {
     left: 4px;
     right: 4px;
     bottom: 8px;
-    padding: 0.4rem 0.6rem;
-    gap: 0.5rem;
-    overflow-x: auto;
-    /* Safety for very small screens */
-    scrollbar-width: none;
-  }
-
-  .video-player-bar__controls-overlay::-webkit-scrollbar {
-    display: none;
+    padding: 0.3rem 0.4rem;
+    gap: 0.3rem;
+    justify-content: center;
+    flex-wrap: nowrap;
   }
 
   .video-player-bar__icon-btn {
-    padding: 0.35rem;
-    font-size: 1rem;
+    padding: 0.3rem;
+    font-size: 0.9rem;
+    flex-shrink: 0;
   }
 
   .video-player-bar__time {
-    font-size: 0.8rem;
-    min-width: 60px;
-    margin: 0 0.2rem;
+    font-size: 0.65rem;
+    min-width: 50px;
+    margin: 0;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .video-player-bar__seek {
-    margin: 0 0.3rem;
+    margin: 0 0.2rem;
+    flex: 1;
+    min-width: 60px;
+  }
+
+  /* Hide non-essential controls on mobile */
+  .video-player-bar__hide-mobile {
+    display: none !important;
+  }
+
+  /* Adjust pause icon size for mobile */
+  .video-player-bar__pause-icon {
+    padding: 1.5rem;
+    font-size: 2rem;
+  }
+
+  /* Adjust settings panel position on mobile */
+  .video-player-bar__settings-panel {
+    right: -4px;
+    min-width: 150px;
+    padding: 0.8rem 1rem;
+  }
+
+  .video-player-bar__settings-label {
+    font-size: 0.9rem;
+  }
+
+  .video-player-bar__settings-option {
+    padding: 0.3rem 0.8rem;
+    font-size: 0.9rem;
   }
 }

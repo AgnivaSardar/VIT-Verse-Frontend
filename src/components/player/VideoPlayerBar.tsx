@@ -74,10 +74,20 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   const handleFullscreen = () => {
     const container = containerRef.current;
     if (!container) return;
+    
     if (document.fullscreenElement) {
       document.exitFullscreen();
     } else {
-      container.requestFullscreen();
+      // Try different fullscreen methods for cross-browser compatibility
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if ((container as any).webkitRequestFullscreen) {
+        (container as any).webkitRequestFullscreen();
+      } else if ((container as any).mozRequestFullScreen) {
+        (container as any).mozRequestFullScreen();
+      } else if ((container as any).msRequestFullscreen) {
+        (container as any).msRequestFullscreen();
+      }
     }
   };
 
@@ -95,6 +105,7 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   const [volume, setVolume] = useState(1);
   const [volumePanelVisible, setVolumePanelVisible] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
+  const [showPauseOverlay, setShowPauseOverlay] = useState(false);
   const lastTapRef = useRef<number>(0);
   const idleTimeoutRef = useRef<number | undefined>(undefined);
 
@@ -104,9 +115,11 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
     if (video.paused) {
       video.play();
       setIsPlaying(true);
+      setShowPauseOverlay(false);
     } else {
       video.pause();
       setIsPlaying(false);
+      setShowPauseOverlay(true);
     }
   }, []);
 
@@ -265,18 +278,28 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
           onDoubleClick={handleVideoDoubleClick}
           onTouchEnd={handleVideoTouch}
         />
+        {/* Pause Overlay */}
+        {!isPlaying && showPauseOverlay && (
+          <div className="video-player-bar__pause-overlay">
+            <div className="video-player-bar__pause-icon">
+              <FaPause />
+            </div>
+          </div>
+        )}
         {controlsVisible && (
           <div className="video-player-bar__controls-overlay" onClick={() => {
             if (volumePanelVisible) setVolumePanelVisible(false);
           }}>
-            {/* ALL YOUR CONTROLS EXACTLY THE SAME */}
-            <button onClick={e => { e.stopPropagation(); handleVideoDoubleTap('left'); }} className="video-player-bar__icon-btn" title="Rewind 10s">
+            {/* Rewind - hidden on mobile */}
+            <button onClick={e => { e.stopPropagation(); handleVideoDoubleTap('left'); }} className="video-player-bar__icon-btn video-player-bar__hide-mobile" title="Rewind 10s">
               <FaBackward />
             </button>
+            {/* Play/Pause - always visible */}
             <button onClick={e => { e.stopPropagation(); handlePlayPause(); }} className="video-player-bar__icon-btn" title={isPlaying ? 'Pause' : 'Play'}>
               {isPlaying ? <FaPause /> : <FaPlay />}
             </button>
-            <div className="video-player-bar__volume-btn-container" style={{ position: 'relative', display: 'inline-block' }} onClick={e => e.stopPropagation()}>
+            {/* Volume - hidden on mobile */}
+            <div className="video-player-bar__volume-btn-container video-player-bar__hide-mobile" style={{ position: 'relative', display: 'inline-block' }} onClick={e => e.stopPropagation()}>
               <button className="video-player-bar__icon-btn" onClick={toggleVolumePanel} title="Volume">
                 <FaVolumeUp />
               </button>
@@ -290,15 +313,19 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
                 </div>
               )}
             </div>
+            {/* Seek bar - always visible */}
             <input type="range" min={0} max={duration} value={currentTime} onChange={e => {
               const time = Number(e.target.value);
               setCurrentTime(time);
               if (videoRef.current) videoRef.current.currentTime = time;
             }} className="video-player-bar__seek" />
+            {/* Time - always visible */}
             <span className="video-player-bar__time">{formatTime(currentTime)} / {formatTime(duration)}</span>
-            <button onClick={e => { e.stopPropagation(); handleVideoDoubleTap('right'); }} className="video-player-bar__icon-btn" title="Forward 10s">
+            {/* Forward - hidden on mobile */}
+            <button onClick={e => { e.stopPropagation(); handleVideoDoubleTap('right'); }} className="video-player-bar__icon-btn video-player-bar__hide-mobile" title="Forward 10s">
               <FaForward />
             </button>
+            {/* Fullscreen - always visible */}
             <button onClick={e => { e.stopPropagation(); handleFullscreen(); }} className="video-player-bar__icon-btn" title="Fullscreen">
               <FaExpand />
             </button>
