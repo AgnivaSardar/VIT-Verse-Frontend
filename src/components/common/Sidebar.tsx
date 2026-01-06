@@ -48,17 +48,10 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Close sidebar when route changes on mobile
-  useEffect(() => {
-    if (isMobile && isSidebarOpen) {
-      closeSidebar();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
-
   // Close sidebar on link click for mobile
   const handleLinkClick = () => {
     if (isMobile) {
+      // Close sidebar immediately when link is clicked
       closeSidebar();
     }
   };

@@ -10,17 +10,32 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
 export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Default: sidebar open on desktop (>768px), closed on mobile (<=768px)
-    const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
-        return window.innerWidth > 768;
-    });
+    // Default: sidebar closed, will be set based on screen size in useEffect
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    // Set initial sidebar state based on screen size (client-side only)
+    React.useEffect(() => {
+        const isDesktop = window.innerWidth > 768;
+        setIsSidebarOpen(isDesktop);
+        console.log('UIContext initialized:', { isDesktop, isSidebarOpen: isDesktop });
+    }, []);
 
     const toggleSidebar = () => {
-        setIsSidebarOpen(prev => !prev);
+        setIsSidebarOpen(prev => {
+            console.log('toggleSidebar:', !prev);
+            return !prev;
+        });
     };
 
-    const closeSidebar = () => setIsSidebarOpen(false);
-    const openSidebar = () => setIsSidebarOpen(true);
+    const closeSidebar = () => {
+        console.log('closeSidebar');
+        setIsSidebarOpen(false);
+    };
+    
+    const openSidebar = () => {
+        console.log('openSidebar');
+        setIsSidebarOpen(true);
+    };
 
     return (
         <UIContext.Provider value={{ isSidebarOpen, toggleSidebar, closeSidebar, openSidebar }}>

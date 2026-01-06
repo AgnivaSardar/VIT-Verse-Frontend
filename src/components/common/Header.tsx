@@ -37,15 +37,39 @@ const Header: React.FC = () => {
   const [showThemeDropdown, setShowThemeDropdown] = useState(false);
   const location = useLocation();
 
-  // Sync sidebar state to body class - inverted to 'sidebar-open'
+  // Sync sidebar state to body class
   useEffect(() => {
-    if (isSidebarOpen) {
-      document.body.classList.add('sidebar-open');
-      document.body.classList.remove('sidebar-hidden');
-    } else {
-      document.body.classList.remove('sidebar-open');
-      document.body.classList.add('sidebar-hidden');
-    }
+    const updateBodyClass = () => {
+      const isMobile = window.innerWidth <= 768;
+      
+      console.log('Header: updateBodyClass', { isMobile, isSidebarOpen, bodyClasses: document.body.className });
+      
+      if (isMobile) {
+        // Mobile: use 'sidebar-open' class to show overlay
+        if (isSidebarOpen) {
+          document.body.classList.add('sidebar-open');
+        } else {
+          document.body.classList.remove('sidebar-open');
+        }
+        // Remove desktop class if present
+        document.body.classList.remove('sidebar-hidden');
+      } else {
+        // Desktop: use 'sidebar-hidden' class to hide/collapse
+        if (isSidebarOpen) {
+          document.body.classList.remove('sidebar-hidden');
+        } else {
+          document.body.classList.add('sidebar-hidden');
+        }
+        // Remove mobile class if present
+        document.body.classList.remove('sidebar-open');
+      }
+      
+      console.log('Header: after update', { bodyClasses: document.body.className });
+    };
+
+    updateBodyClass();
+    window.addEventListener('resize', updateBodyClass);
+    return () => window.removeEventListener('resize', updateBodyClass);
   }, [isSidebarOpen]);
 
   // Hide header on downward scroll (mobile); show when scrolling up
