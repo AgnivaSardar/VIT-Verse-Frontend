@@ -284,11 +284,14 @@ aside.collapsed~main {
     overflow: hidden;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
       width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Hide sidebar when not open on mobile */
+    transform: translateX(-100%);
   }
 
   /* When body has sidebar-open class on mobile, expand it to full overlay */
   body.sidebar-open aside {
     width: 240px;
+    transform: translateX(0);
   }
 
   /* Hide sidebar completely if we want NO gap, OR keep it as a tiny overlay strip.
