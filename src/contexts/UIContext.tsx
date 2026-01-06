@@ -10,9 +10,10 @@ interface UIContextType {
 const UIContext = createContext<UIContextType | undefined>(undefined);
 
 export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // meaningful default: sidebar open on desktop, maybe closed on mobile (handled by media queries usually, 
-    // but let's default to true for now as per previous behavior)
-    const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    // Default: sidebar open on desktop (>768px), closed on mobile (<=768px)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+        return window.innerWidth > 768;
+    });
 
     const toggleSidebar = () => {
         setIsSidebarOpen(prev => !prev);
