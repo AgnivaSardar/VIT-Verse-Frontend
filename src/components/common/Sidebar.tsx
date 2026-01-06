@@ -35,15 +35,31 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
   const location = useLocation();
   const [topTags, setTopTags] = useState<Tag[]>([]);
   const [topChannels, setTopChannels] = useState<Channel[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close sidebar when route changes on mobile
+  useEffect(() => {
+    if (isMobile && isSidebarOpen) {
+      closeSidebar();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   // Close sidebar on link click for mobile
   const handleLinkClick = () => {
-    // Let the navigation happen first, then close sidebar
-    if (window.innerWidth <= 768) {
-      // Small delay to ensure navigation completes before sidebar closes
-      setTimeout(() => {
-        closeSidebar();
-      }, 50);
+    if (isMobile) {
+      closeSidebar();
     }
   };
 
@@ -119,8 +135,8 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
 
   return (
     <>
-      {/* Mobile backdrop overlay */}
-      {isSidebarOpen && window.innerWidth <= 768 && (
+      {/* Mobile backdrop overlay - positioned BEHIND sidebar */}
+      {isSidebarOpen && isMobile && (
         <div 
           className="sidebar-backdrop" 
           onClick={closeSidebar}
@@ -132,13 +148,13 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
             bottom: 0,
             background: 'rgba(0, 0, 0, 0.5)',
             backdropFilter: 'blur(4px)',
-            zIndex: 2004,
+            zIndex: 2000,
           }}
         />
       )}
       <aside className={collapsed ? 'collapsed' : ''}>
         {renderNavLinks(mainNav)}
-        {(!collapsed || (window.innerWidth <= 768 && isSidebarOpen)) && (
+        {(!collapsed || (isMobile && isSidebarOpen)) && (
           <>
           <hr style={{ margin: '8px 0', border: 0, borderTop: '1px solid #eee' }} />
 
