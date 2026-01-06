@@ -218,11 +218,11 @@ const Header: React.FC = () => {
       </div>
 
       <div className="user-icons">
-        <Link to="/upload" title="Upload Video">
+        <Link to="/upload" title="Upload Video" className="mobile-hidden">
           <FaVideo />
         </Link>
 
-        <div className="icon-with-menu">
+        <div className="icon-with-menu mobile-hidden">
           <FaBell onClick={handleBellClick} />
           {showNotifications && (
             <div className="dropdown notifications">
@@ -303,6 +303,10 @@ const Header: React.FC = () => {
                     <FaEdit /> Edit Profile
                   </button>
                   <hr className="dropdown-divider" />
+                  <button className="dropdown-item mobile-only" onClick={handleBellClick}>
+                    <FaBell /> Notifications
+                  </button>
+                  <hr className="dropdown-divider mobile-only" />
                   {userChannel ? (
                     <>
                       <button

@@ -351,7 +351,7 @@ header {
     order: 3;
     width: 100%;
     margin: 4px 0 2px 0;
-    justify-content: center;
+    justify-content: flex-start;
   }
 
   .search-bar {
@@ -376,6 +376,16 @@ header {
   }
 
   .mobile-hidden {
+    display: none !important;
+  }
+
+  .mobile-only {
+    display: block !important;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
     display: none !important;
   }
 }

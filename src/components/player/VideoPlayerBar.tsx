@@ -108,7 +108,6 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   const [showPauseOverlay, setShowPauseOverlay] = useState(false);
   const [showPlayIndicator, setShowPlayIndicator] = useState(false);
   const lastTapRef = useRef<number>(0);
-  const tapCountRef = useRef<number>(0);
   const tapTimeoutRef = useRef<number | undefined>(undefined);
   const idleTimeoutRef = useRef<number | undefined>(undefined);
 
