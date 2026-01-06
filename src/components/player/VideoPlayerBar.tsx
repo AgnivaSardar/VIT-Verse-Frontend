@@ -106,12 +106,17 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
   const [volumePanelVisible, setVolumePanelVisible] = useState(false);
   const [controlsVisible, setControlsVisible] = useState(true);
   const [showPauseOverlay, setShowPauseOverlay] = useState(false);
+  const [showPlayIndicator, setShowPlayIndicator] = useState(false);
   const lastTapRef = useRef<number>(0);
+  const tapCountRef = useRef<number>(0);
+  const tapTimeoutRef = useRef<number | undefined>(undefined);
   const idleTimeoutRef = useRef<number | undefined>(undefined);
 
   const handlePlayPause = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
+    const isMobile = window.innerWidth <= 768;
+    
     if (video.paused) {
       video.play();
       setIsPlaying(true);
@@ -119,18 +124,29 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
     } else {
       video.pause();
       setIsPlaying(false);
-      setShowPauseOverlay(true);
+      // Only show pause overlay on desktop, not mobile
+      if (!isMobile) {
+        setShowPauseOverlay(true);
+      }
     }
   }, []);
 
   // ... ALL OTHER FUNCTIONS EXACTLY THE SAME (handleVideoClick, handleVideoDoubleTap, etc.) ...
   const handleVideoClick = () => {
-    handlePlayPause();
+    const isMobile = window.innerWidth <= 768;
+    
+    if (!isMobile) {
+      // Desktop: single click pauses immediately
+      handlePlayPause();
+    }
+    // Mobile: handled by touch events
   };
 
   const handleVideoDoubleTap = useCallback((action: 'left' | 'right' | 'middle') => {
     const video = videoRef.current;
     if (!video) return;
+    const isMobile = window.innerWidth <= 768;
+    
     if (action === 'left') {
       video.currentTime = Math.max(0, video.currentTime - 10);
       setCurrentTime(video.currentTime);
@@ -139,7 +155,10 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
       video.currentTime = Math.min(activeDuration, video.currentTime + 10);
       setCurrentTime(video.currentTime);
     } else if (action === 'middle') {
-      handleFullscreen();
+      // Only allow middle double-tap fullscreen on desktop
+      if (!isMobile) {
+        handleFullscreen();
+      }
     }
   }, [duration]);
 
@@ -158,20 +177,66 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
 
   const handleVideoTouch = (e: React.TouchEvent<HTMLVideoElement>) => {
     const now = Date.now();
-    const touchX = e.nativeEvent ? (e as any).nativeEvent.offsetX : e.touches[0].clientX;
-    const width = e.currentTarget.offsetWidth;
-    const third = width * 0.3;
+    const touch = e.touches[0] || e.changedTouches[0];
+    const rect = e.currentTarget.getBoundingClientRect();
+    const touchX = touch.clientX - rect.left;
+    const width = rect.width;
+    const third = width * 0.35; // Larger regions for easier tapping
 
-    if (now - lastTapRef.current < 300) {
+    const timeSinceLastTap = now - lastTapRef.current;
+
+    if (timeSinceLastTap < 300) {
+      // Double tap detected - this is for skip forward/backward
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Clear any pending single tap action
+      if (tapTimeoutRef.current) {
+        window.clearTimeout(tapTimeoutRef.current);
+        tapTimeoutRef.current = undefined;
+      }
+      
+      // Hide play indicator if showing
+      setShowPlayIndicator(false);
+      
       if (touchX < third) {
+        // Left side - rewind
         handleVideoDoubleTap('left');
       } else if (touchX > width - third) {
+        // Right side - forward
         handleVideoDoubleTap('right');
-      } else {
-        handleVideoDoubleTap('middle');
       }
+      // Middle double-tap does nothing on mobile
+      
+      lastTapRef.current = 0; // Reset to prevent triple-tap issues
+    } else {
+      // Potential single tap - wait to see if it's a double tap
+      lastTapRef.current = now;
+      
+      // Clear previous timeout if any
+      if (tapTimeoutRef.current) {
+        window.clearTimeout(tapTimeoutRef.current);
+      }
+      
+      // Set timeout to handle as single tap if no second tap comes
+      tapTimeoutRef.current = window.setTimeout(() => {
+        // Single tap confirmed
+        if (!showPlayIndicator) {
+          // First tap: show current status
+          setShowPlayIndicator(true);
+          setTimeout(() => setShowPlayIndicator(false), 2000);
+        } else {
+          // Second tap while indicator visible: toggle play/pause
+          handlePlayPause();
+          // Show the new state briefly after toggle
+          setTimeout(() => {
+            setShowPlayIndicator(true);
+            setTimeout(() => setShowPlayIndicator(false), 1000);
+          }, 50);
+        }
+        tapTimeoutRef.current = undefined;
+      }, 300); // Wait 300ms to distinguish from double tap
     }
-    lastTapRef.current = now;
   };
 
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -255,6 +320,9 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
       if (idleTimeoutRef.current) {
         window.clearTimeout(idleTimeoutRef.current);
       }
+      if (tapTimeoutRef.current) {
+        window.clearTimeout(tapTimeoutRef.current);
+      }
     };
   }, [handlePlayPause, handleVideoDoubleTap]);
 
@@ -283,6 +351,14 @@ const VideoPlayerBar: React.FC<VideoPlayerBarProps> = ({ src, poster }) => {
           <div className="video-player-bar__pause-overlay">
             <div className="video-player-bar__pause-icon">
               <FaPause />
+            </div>
+          </div>
+        )}
+        {/* Play Indicator Overlay (for mobile) */}
+        {showPlayIndicator && (
+          <div className="video-player-bar__play-indicator">
+            <div className="video-player-bar__play-icon">
+              {isPlaying ? <FaPause /> : <FaPlay />}
             </div>
           </div>
         )}

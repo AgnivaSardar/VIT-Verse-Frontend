@@ -225,6 +225,34 @@
   animation: pauseIconFade 0.3s ease-in;
 }
 
+/* Play Indicator Overlay (shows current state on tap) */
+.video-player-bar__play-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 4;
+  pointer-events: none;
+  animation: fadeInOut 2s ease-in-out;
+}
+
+.video-player-bar__play-icon {
+  background: rgba(99, 102, 241, 0.85);
+  color: #fff;
+  border-radius: 50%;
+  padding: 1.5rem;
+  font-size: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
 @keyframes pauseIconFade {
   from {
     opacity: 0;
@@ -233,6 +261,21 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
