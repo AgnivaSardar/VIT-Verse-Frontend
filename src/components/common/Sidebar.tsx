@@ -38,8 +38,12 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
 
   // Close sidebar on link click for mobile
   const handleLinkClick = () => {
+    // Let the navigation happen first, then close sidebar
     if (window.innerWidth <= 768) {
-      closeSidebar();
+      // Small delay to ensure navigation completes before sidebar closes
+      setTimeout(() => {
+        closeSidebar();
+      }, 50);
     }
   };
 
@@ -114,10 +118,28 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
     ));
 
   return (
-    <aside className={collapsed ? 'collapsed' : ''}>
-      {renderNavLinks(mainNav)}
-      {(!collapsed || (window.innerWidth <= 768 && isSidebarOpen)) && (
-        <>
+    <>
+      {/* Mobile backdrop overlay */}
+      {isSidebarOpen && window.innerWidth <= 768 && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={closeSidebar}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 2004,
+          }}
+        />
+      )}
+      <aside className={collapsed ? 'collapsed' : ''}>
+        {renderNavLinks(mainNav)}
+        {(!collapsed || (window.innerWidth <= 768 && isSidebarOpen)) && (
+          <>
           <hr style={{ margin: '8px 0', border: 0, borderTop: '1px solid #eee' }} />
 
           <p className="section-title">Subscribed Channels</p>
@@ -191,6 +213,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed: propsCollapsed }) => {
         </>
       )}
     </aside>
+    </>
   );
 };
 
