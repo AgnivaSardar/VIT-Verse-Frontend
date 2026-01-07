@@ -18,7 +18,8 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUI } from '../../contexts/UIContext';
 import SearchBar from './SearchBar';
-import { type Notification } from '../../services/notificationsApi';
+import NotificationPanel from './NotificationPanel';
+import { notificationsApi } from '../../services/notificationsApi';
 import { channelsApi } from '../../services/channelsApi';
 import type { Channel } from '../../types';
 import '../../styles/header.css';
@@ -26,8 +27,7 @@ import '../../styles/header.css';
 const Header: React.FC = () => {
   const { isSidebarOpen, toggleSidebar } = useUI();
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications] = useState<Notification[]>([]);
-  const [notifLoading, setNotifLoading] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [userChannel, setUserChannel] = useState<Channel | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
@@ -156,23 +156,30 @@ const Header: React.FC = () => {
     }
   }, [user]);
 
-  const fetchNotifications = async () => {
-    try {
-      // ...fetch logic here
-    } catch (error) {
-      toast.error('Could not load notifications');
-      console.error(error);
-    } finally {
-      setNotifLoading(false);
+  // Fetch unread notification count
+  useEffect(() => {
+    if (user?.id) {
+      const fetchUnreadCount = async () => {
+        try {
+          const count = await notificationsApi.getUnreadCount(user.id);
+          setUnreadCount(count);
+        } catch (error) {
+          console.error('Failed to fetch unread count:', error);
+        }
+      };
+
+      fetchUnreadCount();
+
+      // Poll for updates every 30 seconds
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    } else {
+      setUnreadCount(0);
     }
-  };
+  }, [user]);
 
   const handleBellClick = () => {
-    const next = !showNotifications;
-    setShowNotifications(next);
-    if (next) {
-      fetchNotifications();
-    }
+    setShowNotifications((prev) => !prev);
   };
 
   const handleAvatarClick = () => {
@@ -222,25 +229,41 @@ const Header: React.FC = () => {
           <FaVideo />
         </Link>
 
-        <div className="icon-with-menu mobile-hidden">
-          <FaBell onClick={handleBellClick} />
-          {showNotifications && (
-            <div className="dropdown notifications">
-              <div className="dropdown-header">Notifications</div>
-              {notifLoading && <div className="dropdown-item muted">Loading...</div>}
-              {!notifLoading && notifications.length === 0 && (
-                <div className="dropdown-item muted">No notifications</div>
+        {user && (
+          <div className="icon-with-menu mobile-hidden" style={{ position: 'relative' }}>
+            <div style={{ position: 'relative', display: 'inline-block', cursor: 'pointer' }} onClick={handleBellClick}>
+              <FaBell />
+              {unreadCount > 0 && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: -6,
+                    right: -6,
+                    background: '#ef4444',
+                    color: 'white',
+                    borderRadius: '50%',
+                    minWidth: 18,
+                    height: 18,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    padding: '0 4px',
+                  }}
+                >
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
               )}
-              {!notifLoading &&
-                notifications.map((note) => (
-                  <div key={note.id || note.message} className="dropdown-item">
-                    <div className="note-message">{note.message}</div>
-                    <div className="note-meta">{note.type}</div>
-                  </div>
-                ))}
             </div>
-          )}
-        </div>
+            {showNotifications && (
+              <NotificationPanel
+                onClose={() => setShowNotifications(false)}
+                onUnreadCountChange={(count) => setUnreadCount(count)}
+              />
+            )}
+          </div>
+        )}
 
         {/* New button next to user icon */}
         <div className="user-action-btn-wrapper">
