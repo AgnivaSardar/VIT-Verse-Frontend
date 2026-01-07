@@ -13,7 +13,6 @@ import {
   FaSun,
   FaUserShield,
 } from 'react-icons/fa';
-import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useUI } from '../../contexts/UIContext';
@@ -161,8 +160,8 @@ const Header: React.FC = () => {
     if (user?.id) {
       const fetchUnreadCount = async () => {
         try {
-          const count = await notificationsApi.getUnreadCount(user.id);
-          setUnreadCount(count);
+          const response = await notificationsApi.getUnreadCount(user.id);
+          setUnreadCount(response.data.unreadCount);
         } catch (error) {
           console.error('Failed to fetch unread count:', error);
         }
@@ -258,8 +257,15 @@ const Header: React.FC = () => {
             </div>
             {showNotifications && (
               <NotificationPanel
-                onClose={() => setShowNotifications(false)}
-                onUnreadCountChange={(count) => setUnreadCount(count)}
+                onClose={() => {
+                  setShowNotifications(false);
+                  // Refresh unread count when closing
+                  if (user?.id) {
+                    notificationsApi.getUnreadCount(user.id)
+                      .then(response => setUnreadCount(response.data.unreadCount))
+                      .catch(err => console.error('Failed to refresh unread count:', err));
+                  }
+                }}
               />
             )}
           </div>
