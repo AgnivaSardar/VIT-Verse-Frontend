@@ -36,7 +36,27 @@ export function uploadWithProgress(endpoint: string, formData: FormData, onProgr
       }
     };
 
-    xhr.onerror = () => reject(new Error('Upload failed'));
+    xhr.onerror = () => {
+      const uploadError = new Error('Upload failed');
+      // Check if it might be a certificate/network issue
+      import('react-hot-toast').then(({ default: toast }) => {
+        toast.error(
+          '🔒 Upload Failed - Network Issue Detected!\n\n' +
+          '⚠️ If you\'re on public WiFi (college/office),\n' +
+          'please switch to mobile data.\n\n' +
+          'Public WiFi firewalls can block file uploads.',
+          {
+            duration: 7000,
+            style: {
+              minWidth: '350px',
+              fontSize: '14px',
+              whiteSpace: 'pre-line',
+            },
+          }
+        );
+      });
+      reject(uploadError);
+    };
 
     xhr.onabort = () => {
       const abortErr = new Error('Upload cancelled');
@@ -92,6 +112,66 @@ const getAuthHeadersNoContentType = () => {
   return headers;
 };
 
+// Check if error is related to certificate/network issues (common with public WiFi)
+const isCertificateOrNetworkError = (error: any): boolean => {
+  if (!error) return false;
+  
+  const errorMessage = error.message?.toLowerCase() || '';
+  const errorName = error.name?.toLowerCase() || '';
+  
+  // Common certificate and network error patterns
+  const certificateErrors = [
+    'certificate',
+    'ssl',
+    'tls',
+    'cert',
+    'self-signed',
+    'untrusted',
+    'net::err_cert',
+    'sec_error',
+    'mozilla_pkix_error',
+  ];
+  
+  const networkErrors = [
+    'network',
+    'failed to fetch',
+    'network request failed',
+    'typeerror: failed to fetch',
+    'networkerror',
+    'connection',
+    'timeout',
+    'econnrefused',
+    'enotfound',
+  ];
+  
+  const allPatterns = [...certificateErrors, ...networkErrors];
+  
+  return allPatterns.some(pattern => 
+    errorMessage.includes(pattern) || errorName.includes(pattern)
+  );
+};
+
+// Show user-friendly message for certificate/network issues
+const showNetworkErrorToast = () => {
+  // Only import toast when needed to avoid circular dependencies
+  import('react-hot-toast').then(({ default: toast }) => {
+    toast.error(
+      '🔒 Connection Issue Detected!\n\n' +
+      '⚠️ If you\'re on public WiFi (college/office network),\n' +
+      'please disconnect and use your mobile data instead.\n\n' +
+      'Public WiFi firewalls (like Fortinet) can block secure connections.',
+      {
+        duration: 8000,
+        style: {
+          minWidth: '350px',
+          fontSize: '14px',
+          whiteSpace: 'pre-line',
+        },
+      }
+    );
+  });
+};
+
 const handleResponse = async (response: Response) => {
   // Allow 304 Not Modified as a soft success with no body
   if (response.status === 304) {
@@ -135,7 +215,14 @@ const api = {
       headers: getAuthHeaders(),
       credentials: 'include',
       cache: 'no-store',
-    }).then(handleResponse) as Promise<ApiResponse<T>>,
+    })
+      .then(handleResponse)
+      .catch((error) => {
+        if (isCertificateOrNetworkError(error)) {
+          showNetworkErrorToast();
+        }
+        throw error;
+      }) as Promise<ApiResponse<T>>,
 
   post: <T>(endpoint: string, body: any) =>
     fetch(buildUrl(endpoint), {
@@ -144,7 +231,14 @@ const api = {
       credentials: 'include',
       body: JSON.stringify(body),
       cache: 'no-store',
-    }).then(handleResponse) as Promise<ApiResponse<T>>,
+    })
+      .then(handleResponse)
+      .catch((error) => {
+        if (isCertificateOrNetworkError(error)) {
+          showNetworkErrorToast();
+        }
+        throw error;
+      }) as Promise<ApiResponse<T>>,
 
   put: <T>(endpoint: string, body: any) =>
     fetch(buildUrl(endpoint), {
@@ -153,7 +247,14 @@ const api = {
       credentials: 'include',
       body: JSON.stringify(body),
       cache: 'no-store',
-    }).then(handleResponse) as Promise<ApiResponse<T>>,
+    })
+      .then(handleResponse)
+      .catch((error) => {
+        if (isCertificateOrNetworkError(error)) {
+          showNetworkErrorToast();
+        }
+        throw error;
+      }) as Promise<ApiResponse<T>>,
 
   delete: <T>(endpoint: string) =>
     fetch(buildUrl(endpoint), {
@@ -161,7 +262,14 @@ const api = {
       headers: getAuthHeaders(),
       credentials: 'include',
       cache: 'no-store',
-    }).then(handleResponse) as Promise<ApiResponse<T>>,
+    })
+      .then(handleResponse)
+      .catch((error) => {
+        if (isCertificateOrNetworkError(error)) {
+          showNetworkErrorToast();
+        }
+        throw error;
+      }) as Promise<ApiResponse<T>>,
 
   deleteWithBody: <T>(endpoint: string, body: any) =>
     fetch(buildUrl(endpoint), {
@@ -170,7 +278,14 @@ const api = {
       credentials: 'include',
       body: JSON.stringify(body),
       cache: 'no-store',
-    }).then(handleResponse) as Promise<ApiResponse<T>>,
+    })
+      .then(handleResponse)
+      .catch((error) => {
+        if (isCertificateOrNetworkError(error)) {
+          showNetworkErrorToast();
+        }
+        throw error;
+      }) as Promise<ApiResponse<T>>,
 
   patch: <T>(endpoint: string, body?: any) =>
     fetch(buildUrl(endpoint), {
@@ -179,7 +294,14 @@ const api = {
       credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
       cache: 'no-store',
-    }).then(handleResponse) as Promise<ApiResponse<T>>,
+    })
+      .then(handleResponse)
+      .catch((error) => {
+        if (isCertificateOrNetworkError(error)) {
+          showNetworkErrorToast();
+        }
+        throw error;
+      }) as Promise<ApiResponse<T>>,
 
   upload: (endpoint: string, formData: FormData, method: string = 'POST') => {
     const headers = getAuthHeadersNoContentType();
@@ -189,7 +311,14 @@ const api = {
       credentials: 'include',
       body: formData,
       cache: 'no-store',
-    }).then(handleResponse);
+    })
+      .then(handleResponse)
+      .catch((error) => {
+        if (isCertificateOrNetworkError(error)) {
+          showNetworkErrorToast();
+        }
+        throw error;
+      });
   },
 
   // Test backend connection
