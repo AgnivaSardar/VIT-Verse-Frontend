@@ -92,6 +92,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           name: String(parsedUser?.name ?? parsedUser?.userName ?? parsedUser?.userEmail ?? parsedUser?.email ?? ''),
           email: String(parsedUser?.email ?? parsedUser?.userEmail ?? ''),
           role: parsedUser?.role ?? 'student',
+          isEmailVerified: parsedUser?.isEmailVerified ?? false,
+          isSuperAdmin: parsedUser?.isSuperAdmin ?? false,
         } as User;
         // If the stored name looks like an email and we have a separate userName, prefer that
         if (normalized.name.includes('@') && parsedUser?.userName) {
@@ -129,6 +131,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         name: String(payloadUser?.name ?? payloadUser?.userName ?? identifier),
         email: String(payloadUser?.email ?? payloadUser?.userEmail ?? identifier),
         role: (payloadUser?.role as any) || 'student',
+        isEmailVerified: payloadUser?.isEmailVerified ?? false,
+        isSuperAdmin: payloadUser?.isSuperAdmin ?? false,
       };
 
       localStorage.setItem('authToken', token);
